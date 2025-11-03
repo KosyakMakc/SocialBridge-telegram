@@ -3,15 +3,15 @@ import dev.vanutp.tgbridge.common.TelegramBridge;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.SocialUser;
+import io.github.kosyakmakc.socialBridge.Utils.Version;
 
-import java.lang.Runtime.Version;
 import java.util.HashMap;
 
 public class TelegramPlatform implements ISocialPlatform {
     private ISocialBridge bridge;
     private TelegramBridge tgBridge;
 
-    private final Version socialBridgeCompabilityVersion = Version.parse("0.1.0");
+    private final Version socialBridgeCompabilityVersion = new Version("0.1.0");
 
     @Override
     public void Start() {
