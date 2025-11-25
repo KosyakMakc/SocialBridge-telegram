@@ -7,6 +7,8 @@ import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCommandBase;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
 import io.github.kosyakmakc.socialBridgeTelegram.TelegramPlatform;
+import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramMessageKey;
+import io.github.kosyakmakc.socialBridgeTelegram.Utils.TranslationException;
 
 public class SetToken extends MinecraftCommandBase{
 
@@ -19,11 +21,24 @@ public class SetToken extends MinecraftCommandBase{
         var token = (String) parameters.get(0);
         var placeholders = new HashMap<String, String>();
         if (validateToken(token)) {
-            this.getBridge().getSocialPlatform(TelegramPlatform.class).setupToken(token);
-            sender.sendMessage(token, placeholders);
+            var setupTask = this.getBridge().getSocialPlatform(TelegramPlatform.class).setupToken(token);
+
+            setupTask.thenRun(() -> {
+                var msgTemplate = getBridge().getLocalizationService().getMessage(sender.getLocale(), TelegramMessageKey.SET_TOKEN_SUCCESS);
+                sender.sendMessage(msgTemplate, placeholders);
+            });
+
+            setupTask.exceptionally(err -> {
+                var msgTemplate = err instanceof TranslationException translationException
+                                        ? getBridge().getLocalizationService().getMessage(sender.getLocale(), translationException.getMessageKey())
+                                        : err.getMessage();
+                sender.sendMessage(msgTemplate, placeholders);
+
+                return true;
+            });
         }
         else {
-            sender.sendMessage(token, placeholders);
+            sender.sendMessage("please provide valid token (123456:secret_token)", placeholders);
         }
     }
 

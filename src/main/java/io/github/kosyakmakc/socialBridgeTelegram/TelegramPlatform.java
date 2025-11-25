@@ -4,7 +4,8 @@ import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.SocialUser;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
-
+import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramMessageKey;
+import io.github.kosyakmakc.socialBridgeTelegram.Utils.TranslationException;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
@@ -13,6 +14,8 @@ import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
 
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.TelegramBotsLongPollingApplication;
@@ -27,7 +30,7 @@ public class TelegramPlatform implements ISocialPlatform {
     private static final String configurationPathRetryMax = configurationPath + "_retries-max";
     private static final int defaultRetryMax = 10;
     private static final String configurationPathRetryDelay = configurationPath + "_retries-delay";
-    private static final int defaultRetryDelay = 10;
+    private static final int defaultRetryDelay = 2;
 
     private final Version socialBridgeCompabilityVersion = new Version("0.2.0");
     private final LongPollingHandler TgUpdatesHandler = new LongPollingHandler(this);
@@ -40,67 +43,65 @@ public class TelegramPlatform implements ISocialPlatform {
 
     @Override
     public void Start() {
-        if (botState == BotState.Stopped) {
-            return;
+        start();
+    }
+
+    private CompletableFuture<Boolean> start() {
+        if (botState != BotState.Stopped) {
+            return CompletableFuture.completedFuture(false);
         }
 
         botState = BotState.Starting;
+        var token = getTgToken();
 
-        var retryCounter = 0;
-        var delay = getRetryDelay();
-        var maxRetries = getMaxRetry();
-        while (retryCounter < maxRetries) {
-            var token = getTgToken();
+        return withRetries(() -> {
             try {
                 botsApplication.registerBot(token, TgUpdatesHandler);
                 telegramClient = new OkHttpTelegramClient(token);
                 botState = BotState.Started;
-                return;
             } catch (TelegramApiException e) {
                 e.printStackTrace();
-                retryCounter++;
-                try {
-                    Thread.sleep(Duration.ofSeconds((int) Math.pow(delay, retryCounter)));
-                } catch (InterruptedException e1) {
-                }
+                return false;
             }
-        }
-
-        botState = BotState.Stopped;
+            return true;
+        });
     }
 
-    public void stop() {
-        if (botState == BotState.Started) {
-            return;
+    public CompletableFuture<Boolean> stop() {
+        if (botState != BotState.Started) {
+            return CompletableFuture.completedFuture(false);
         }
         botState = BotState.Stopping;
+        var token = getTgToken();
         
-        var retryCounter = 0;
-        var delay = getRetryDelay();
-        var maxRetries = getMaxRetry();
-        while (retryCounter < maxRetries) {
-            var token = getTgToken();
+        return withRetries(() -> {
             try {
                 botsApplication.unregisterBot(token);
                 telegramClient = null;
                 botState = BotState.Stopped;
-                return;
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-                retryCounter++;
-                try {
-                    Thread.sleep(Duration.ofSeconds((int) Math.pow(delay, retryCounter)));
-                } catch (InterruptedException e1) {
-                }
             }
-        }
-        botState = BotState.Starting;
+            catch (TelegramApiException err) {
+                err.printStackTrace();
+                return false;
+            }
+            return true;
+        });
     }
+    
+    public CompletableFuture<Boolean> setupToken(String token) {
+        var saveConfigTask = CompletableFuture
+                                .supplyAsync(() -> getBridge().getConfigurationService().set(configurationPathToken, token))
+                                .thenCompose(isSuccess -> isSuccess ? CompletableFuture.completedFuture(isSuccess) : CompletableFuture.failedFuture(new TranslationException(TelegramMessageKey.SET_TOKEN_FAILED_CONFIG)));
 
-    public void setupToken(String token) {
-        getBridge().getConfigurationService().set(configurationPathToken, token);
-        stop();
-        Start();
+        var stoppingTask = saveConfigTask
+                            .thenCompose(isSuccess -> stop())
+                            .thenCompose(isSuccess -> isSuccess ? CompletableFuture.completedFuture(isSuccess) : CompletableFuture.failedFuture(new TranslationException(TelegramMessageKey.SET_TOKEN_FAILED_STOP_BOT)));
+
+        var startingTask = stoppingTask
+                            .thenCompose(isSuccess -> start())
+                            .thenCompose(isSuccess -> isSuccess ? CompletableFuture.completedFuture(isSuccess) : CompletableFuture.failedFuture(new TranslationException(TelegramMessageKey.SET_TOKEN_FAILED_START_BOT)));
+
+        return startingTask;
     }
 
     private String getTgToken() {
@@ -151,14 +152,14 @@ public class TelegramPlatform implements ISocialPlatform {
     public void sendMessage(SocialUser socialUser, String message, HashMap<String, String> placeholders) {
         var builder = MiniMessage.builder()
                 .tags(TagResolver.builder()
-                        .resolver(StandardTags.defaults())
+                        .resolver(StandardTags.decorations())
+                        .resolver(StandardTags.newline())
                         .build());
 
         for (var placeholderKey : placeholders.keySet()) {
             builder.editTags(x -> x.resolver(Placeholder.component(placeholderKey, Component.text(placeholders.get(placeholderKey)))));
         }
         var builtMessage = builder.build().deserialize(message);
-
 
         var tgUser = (TelegramUser) socialUser;
         var chatId = tgUser.getLastMessage().getChat().getId();
@@ -167,31 +168,49 @@ public class TelegramPlatform implements ISocialPlatform {
         msg.setReplyToMessageId(replyToId);
         msg.setParseMode(ParseMode.HTML);
 
-        var retryCounter = 0;
-        var delay = getRetryDelay();
-        var maxRetries = getMaxRetry();
-        while (retryCounter < maxRetries) {
-            if (botState != BotState.Started) {
-                return;
-            }
-
-            try {
-                telegramClient.execute(msg);
-                return;
-            } catch (TelegramApiException e) {
-                e.printStackTrace();
-                retryCounter++;
+        withRetries(() -> {
+            if (botState == BotState.Started) {
                 try {
-                    Thread.sleep(Duration.ofSeconds((int) Math.pow(delay, retryCounter)));
-                } catch (InterruptedException e1) {
+                    telegramClient.execute(msg);
+                    this.getBridge().getLogger().info("tgMessage to \"" + socialUser.getName() + "\" - " + builtMessage);
+                }
+                catch (TelegramApiException err) {
+                    return false;
                 }
             }
-        }
-        this.getBridge().getLogger().info("tgMessage to \"" + socialUser.getName() + "\" - " + builtMessage);
+            return true;
+        });
     }
 
     @Override
     public Version getCompabilityVersion() {
         return socialBridgeCompabilityVersion;
+    }
+
+    private CompletableFuture<Boolean> withRetries(Callable<Boolean> callable) {
+        return CompletableFuture.supplyAsync(() ->  {
+            var retryCounter = 0;
+            var delay = getRetryDelay();
+            var maxRetries = getMaxRetry();
+
+            while (retryCounter < maxRetries) {
+                try {
+                    if (callable.call()) {
+                        return true;
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+
+                    retryCounter++;
+                    try {
+                        Thread.sleep(Duration.ofSeconds((int) Math.pow(delay, retryCounter)));
+                    } catch (InterruptedException e1) {
+                        e1.printStackTrace();
+                        return false;
+                    }
+                }
+            }
+            return false;
+        });
     }
 }
