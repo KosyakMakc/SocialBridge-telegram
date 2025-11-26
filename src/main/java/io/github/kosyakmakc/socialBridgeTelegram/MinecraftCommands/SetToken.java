@@ -10,10 +10,10 @@ import io.github.kosyakmakc.socialBridgeTelegram.TelegramPlatform;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramMessageKey;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TranslationException;
 
-public class SetToken extends MinecraftCommandBase{
+public class SetToken extends MinecraftCommandBase {
 
     public SetToken() {
-        super("setupToken", List.of(CommandArgument.ofWord("Telegram token")));
+        super("setupToken", List.of(CommandArgument.ofGreedyString("Telegram token")));
     }
 
     @Override
@@ -53,15 +53,15 @@ public class SetToken extends MinecraftCommandBase{
             return false;
         }
 
-        var rawBotToken = words[1];
-        if (rawBotToken.length() == 0) {
+        try {
+            Long.parseLong(rawBotId);
+        }
+        catch (NumberFormatException err) {
             return false;
         }
 
-        try {
-            Integer.parseInt(rawBotId);
-        }
-        catch (NumberFormatException err) {
+        var rawBotToken = words[1];
+        if (!rawBotToken.matches("^[a-zA-Z0-9_-]{35}$")) {
             return false;
         }
 

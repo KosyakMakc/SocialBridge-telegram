@@ -32,7 +32,7 @@ public class TelegramPlatform implements ISocialPlatform {
     private static final String configurationPathRetryDelay = configurationPath + "_retries-delay";
     private static final int defaultRetryDelay = 2;
 
-    private final Version socialBridgeCompabilityVersion = new Version("0.2.0");
+    private final Version socialBridgeCompabilityVersion = new Version("0.2.1");
     private final LongPollingHandler TgUpdatesHandler = new LongPollingHandler(this);
     private final TelegramBotsLongPollingApplication botsApplication = new TelegramBotsLongPollingApplication();
     
@@ -51,11 +51,14 @@ public class TelegramPlatform implements ISocialPlatform {
             return CompletableFuture.completedFuture(false);
         }
 
+        getBridge().getLogger().info("Telegram bot starting...");
+
         botState = BotState.Starting;
         var token = getTgToken();
 
         if (token.isBlank()) {
             getBridge().getLogger().info("Token missed, connect to telegram canceled");
+            botState = BotState.Stopped;
             return CompletableFuture.completedFuture(false);
         }
 
@@ -64,6 +67,7 @@ public class TelegramPlatform implements ISocialPlatform {
                 botsApplication.registerBot(token, TgUpdatesHandler);
                 telegramClient = new OkHttpTelegramClient(token);
                 botState = BotState.Started;
+                getBridge().getLogger().info("Telegram bot connected");
             } catch (TelegramApiException e) {
                 e.printStackTrace();
                 return false;
@@ -76,6 +80,9 @@ public class TelegramPlatform implements ISocialPlatform {
         if (botState != BotState.Started) {
             return CompletableFuture.completedFuture(false);
         }
+
+        getBridge().getLogger().info("Telegram bot stopping...");
+
         botState = BotState.Stopping;
         var token = getTgToken();
         
@@ -84,6 +91,7 @@ public class TelegramPlatform implements ISocialPlatform {
                 botsApplication.unregisterBot(token);
                 telegramClient = null;
                 botState = BotState.Stopped;
+                getBridge().getLogger().info("Telegram bot stopped");
             }
             catch (TelegramApiException err) {
                 err.printStackTrace();
@@ -99,7 +107,7 @@ public class TelegramPlatform implements ISocialPlatform {
                                 .thenCompose(isSuccess -> isSuccess ? CompletableFuture.completedFuture(isSuccess) : CompletableFuture.failedFuture(new TranslationException(TelegramMessageKey.SET_TOKEN_FAILED_CONFIG)));
 
         var stoppingTask = saveConfigTask
-                            .thenCompose(isSuccess -> stop())
+                            .thenCompose(isSuccess -> botState != BotState.Stopped ? stop() : CompletableFuture.completedFuture(true))
                             .thenCompose(isSuccess -> isSuccess ? CompletableFuture.completedFuture(isSuccess) : CompletableFuture.failedFuture(new TranslationException(TelegramMessageKey.SET_TOKEN_FAILED_STOP_BOT)));
 
         var startingTask = stoppingTask
@@ -107,6 +115,10 @@ public class TelegramPlatform implements ISocialPlatform {
                             .thenCompose(isSuccess -> isSuccess ? CompletableFuture.completedFuture(isSuccess) : CompletableFuture.failedFuture(new TranslationException(TelegramMessageKey.SET_TOKEN_FAILED_START_BOT)));
 
         return startingTask;
+    }
+
+    public BotState getBotState() {
+        return botState;
     }
 
     private String getTgToken() {
@@ -180,6 +192,7 @@ public class TelegramPlatform implements ISocialPlatform {
                     this.getBridge().getLogger().info("tgMessage to \"" + socialUser.getName() + "\" - " + builtMessage);
                 }
                 catch (TelegramApiException err) {
+                    err.printStackTrace();
                     return false;
                 }
             }

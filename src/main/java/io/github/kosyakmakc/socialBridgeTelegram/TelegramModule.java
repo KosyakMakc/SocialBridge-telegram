@@ -9,14 +9,16 @@ import io.github.kosyakmakc.socialBridge.Commands.SocialCommands.ISocialCommand;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.DefaultTranslations.ITranslationSource;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.SetToken;
+import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.Status;
 import io.github.kosyakmakc.socialBridgeTelegram.Translations.English;
 
 public class TelegramModule implements IBridgeModule {
-    private static final Version compabilityVersion = new Version("0.2.0");
+    private static final Version compabilityVersion = new Version("0.2.1");
     private static final String ModuleName = "Telegram";
 
     private final List<IMinecraftCommand> minecraftCommands = List.of(
-        new SetToken()
+        new SetToken(),
+        new Status()
     );
 
     private final List<ISocialCommand> socialCommands = List.of();

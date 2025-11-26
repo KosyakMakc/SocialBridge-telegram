@@ -1,4 +1,5 @@
 package io.github.kosyakmakc.socialBridgeTelegram;
+import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.SocialUser;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.SocialUserIdType;
@@ -30,7 +31,8 @@ public class TelegramUser extends SocialUser {
 
     @Override
     public String getLocale() {
-        return user.getLanguageCode();
+        var userLocale = user.getLanguageCode();
+        return userLocale == null ? LocalizationService.defaultLocale : userLocale;
     }
 
     @Override
