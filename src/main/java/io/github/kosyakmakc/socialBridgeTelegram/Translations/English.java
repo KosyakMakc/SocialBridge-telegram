@@ -17,11 +17,13 @@ public class English implements ITranslationSource {
     @Override
     public List<LocalizationRecord> getRecords() {
         return List.of(
+                new LocalizationRecord(TelegramMessageKey.SET_TOKEN_DESCRIPTION.key(), "Setup new token of Telegram bot, existed bot also wil be reloaded with new token"),
                 new LocalizationRecord(TelegramMessageKey.SET_TOKEN_SUCCESS.key(), "<green>New token saved and applied.</green>"),
                 new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_CONFIG.key(), "<red>Failed to save token to configuration service.</red>"),
                 new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_STOP_BOT.key(), "<red>Failed to stop telegram bot, new token saved, but not applied.</red>"),
                 new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_START_BOT.key(), "<red>Failed to start telegram bot, new token saved, but not applied.</red>"),
 
+                new LocalizationRecord(TelegramMessageKey.BOT_STATUS_DESCRIPTION.key(), "View status of Telegram bot connection"),
                 new LocalizationRecord(TelegramMessageKey.BOT_STATUS_CONNECTING.key(), "<yellow>Telegram bot are connecting...</yellow>"),
                 new LocalizationRecord(TelegramMessageKey.BOT_STATUS_CONNECTED.key(), "<green>Telegram bot successfully connected.</green>"),
                 new LocalizationRecord(TelegramMessageKey.BOT_STATUS_STOPPING.key(), "<yellow>Telegram bot are stopping...</yellow>"),

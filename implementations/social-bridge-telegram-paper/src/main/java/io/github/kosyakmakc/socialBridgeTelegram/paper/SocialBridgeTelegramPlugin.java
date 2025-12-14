@@ -15,8 +15,8 @@ public class SocialBridgeTelegramPlugin extends JavaPlugin implements IModuleLoa
         platform = new TelegramPlatform();
         module = new TelegramModule(this);
 
-        SocialBridge.INSTANCE.connectSocialPlatform(platform);
-        SocialBridge.INSTANCE.connectModule(module);
+        SocialBridge.INSTANCE.connectModule(module).join();
+        SocialBridge.INSTANCE.connectSocialPlatform(platform).join();
     }
 
     @Override

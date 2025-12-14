@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCommandBase;
+import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridgeTelegram.TelegramModule;
@@ -13,7 +14,7 @@ import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramMessageKey;
 public class Status extends MinecraftCommandBase {
 
     public Status() {
-        super("status");
+        super("status", TelegramMessageKey.BOT_STATUS_DESCRIPTION);
     }
 
     @Override
@@ -37,8 +38,9 @@ public class Status extends MinecraftCommandBase {
                 throw new RuntimeException("Unexpected telegram bot state");
 
         }
-        var msgTemplate = getBridge().getLocalizationService().getMessage(getBridge().getModule(TelegramModule.class), sender.getLocale(), messageKey);
-        sender.sendMessage(msgTemplate, new HashMap<String, String>());
+        var a = LocalizationService.defaultLocale;
+        getBridge().getLocalizationService().getMessage(getBridge().getModule(TelegramModule.class), sender.getLocale(), messageKey)
+        .thenAccept(msgTemplate -> sender.sendMessage(msgTemplate, new HashMap<String, String>()));
     }
 
 }

@@ -23,7 +23,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -45,10 +44,9 @@ public class TelegramPlatform implements ISocialPlatform {
     private static final String configurationPathRetryDelay = configurationPath + "_retries-delay";
     private static final int defaultRetryDelay = 2;
 
-    private static final int userCacheSize = 500;
-    private final CacheContainer<TelegramUser> userCaching = new CacheContainer<>();
+    private final CacheContainer<TelegramUser> userCaching = new CacheContainer<>(500);
 
-    private final Version socialBridgeCompabilityVersion = new Version("0.3.0");
+    private final Version socialBridgeCompabilityVersion = new Version("0.4.0");
     private final TelegramBotsLongPollingApplication botsApplication = new TelegramBotsLongPollingApplication();
     
     private BotState botState = BotState.Stopped;
@@ -91,6 +89,14 @@ public class TelegramPlatform implements ISocialPlatform {
                     }
                     return true;
                 });
+        })
+        .thenComposeAsync(isSuccessStart -> {
+            if (isSuccessStart) {
+                return UpdateCommandSuggestions();
+            }
+            else {
+                return CompletableFuture.completedFuture(false);
+            }
         });
     }
 
@@ -278,6 +284,9 @@ public class TelegramPlatform implements ISocialPlatform {
     }
 
     private CompletableFuture<Boolean> UpdateCommandSuggestions() {
+        if (getBotState() != BotState.Started) {
+            return CompletableFuture.completedFuture(false);
+        }
         @SuppressWarnings("unchecked")
         var commandsInfo = connectedModules
             .stream()
@@ -289,6 +298,10 @@ public class TelegramPlatform implements ISocialPlatform {
             .map(pair -> new BotCommand('/' + pair.left.getName() + '-' + pair.right.getLiteral(), pair.right.getLiteral()))
             .toList();
 
+        if (commandsInfo.isEmpty()) {
+            return CompletableFuture.completedFuture(true);
+        }
+
         var commandQuery = new SetMyCommands(commandsInfo);
         return this.withRetries(() -> telegramClient.execute(commandQuery));
     }
@@ -298,7 +311,7 @@ public class TelegramPlatform implements ISocialPlatform {
         this.bridge = socialBridge;
         logger = Logger.getLogger(this.bridge.getLogger().getName() + '.' + TelegramPlatform.class.getSimpleName());
 
-        return this.bridge.queryDatabase(ctx -> {
+        var initTask = this.bridge.queryDatabase(ctx -> {
             try {
                 TableUtils.createTableIfNotExists(ctx.getConnectionSource(), TelegramUserTable.class);
                 var daoSession = ctx.registerTable(TelegramUserTable.class);
@@ -313,7 +326,12 @@ public class TelegramPlatform implements ISocialPlatform {
                 this.bridge = null;
                 return false;
             }
-        }).thenCompose(d -> startBot());
+        });
+
+        // starting in background
+        initTask.thenCompose(d -> startBot());
+
+        return initTask;
     }
 
     @Override
