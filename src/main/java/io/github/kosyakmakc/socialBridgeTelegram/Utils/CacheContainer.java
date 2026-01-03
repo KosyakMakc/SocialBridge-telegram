@@ -21,7 +21,7 @@ public class CacheContainer<T extends Comparable<T>> {
         this.cacheSize = cacheSize;
     }
 
-    public @Nullable T TryGet(Predicate<T> predicate) {
+    public @Nullable T tryGet(Predicate<T> predicate) {
         AtomicReference<T> result = new AtomicReference<>(null);;
         executor.execute(() -> {
             for (var i = 0; i < cacheLine.size(); i++) {
@@ -40,7 +40,7 @@ public class CacheContainer<T extends Comparable<T>> {
         return result.get();
     }
 
-    public void CheckAndAdd(T newItem) {
+    public void checkAndAdd(T newItem) {
         if (newItem == null) {
             throw new RuntimeException("null value not allowed here");
         }

@@ -1,7 +1,7 @@
 package io.github.kosyakmakc.socialBridgeTelegram;
 
-import io.github.kosyakmakc.socialBridge.IBridgeModule;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
+import io.github.kosyakmakc.socialBridge.ISocialModule;
 import io.github.kosyakmakc.socialBridge.Commands.SocialCommands.ISocialCommand;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
@@ -61,7 +61,7 @@ public class TelegramPlatform implements ISocialPlatform {
     private LongPollingHandler telegramHandler;
     private OkHttpTelegramClient telegramClient;
 
-    private LinkedList<IBridgeModule> connectedModules = new LinkedList<>();
+    private LinkedList<ISocialModule> connectedModules = new LinkedList<>();
 
     private ISocialBridge bridge;
     private Logger logger;
@@ -102,7 +102,7 @@ public class TelegramPlatform implements ISocialPlatform {
         })
         .thenComposeAsync(isSuccessStart -> {
             if (isSuccessStart) {
-                return UpdateCommandSuggestions();
+                return updateCommandSuggestions();
             }
             else {
                 return CompletableFuture.completedFuture(false);
@@ -279,16 +279,16 @@ public class TelegramPlatform implements ISocialPlatform {
     }
 
     @Override
-    public CompletableFuture<Void> connectModule(IBridgeModule module) {
+    public CompletableFuture<Void> connectModule(ISocialModule module) {
         connectedModules.add(module);
-        return UpdateCommandSuggestions().thenRun(() -> {}); // empty runnable for resolve return type from boolean to Void 
+        return updateCommandSuggestions().thenRun(() -> {}); // empty runnable for resolve return type from boolean to Void 
     }
 
     @Override
-    public CompletableFuture<Void> disconnectModule(IBridgeModule module) {
+    public CompletableFuture<Void> disconnectModule(ISocialModule module) {
         var isRemoved = connectedModules.remove(module);
         if (isRemoved) {
-            return UpdateCommandSuggestions().thenRun(() -> {}); // empty runnable for resolve return type from boolean to Void
+            return updateCommandSuggestions().thenRun(() -> {}); // empty runnable for resolve return type from boolean to Void
         }
         else {
             return CompletableFuture.completedFuture(null);
@@ -297,7 +297,7 @@ public class TelegramPlatform implements ISocialPlatform {
 
     private static final Pattern TelegramValidCommandToken = Pattern.compile("^[a-z0-9_]{1,32}$");
 
-    private CompletableFuture<Boolean> UpdateCommandSuggestions() {
+    private CompletableFuture<Boolean> updateCommandSuggestions() {
         var languages = new HashSet<String>();
         for (var module : connectedModules) {
             for (var translationSource : module.getTranslations()) {
@@ -317,7 +317,7 @@ public class TelegramPlatform implements ISocialPlatform {
 
                 x.getSocialCommands().forEach(y -> consumer.accept(new ImmutablePair<>(x, y)));
             })
-            .map(x -> (ImmutablePair<IBridgeModule, ISocialCommand>) x)
+            .map(x -> (ImmutablePair<ISocialModule, ISocialCommand>) x)
             .map(pair -> {
                 var finalName = pair.left.getName() + '_' + pair.right.getLiteral();
                 var matcher = TelegramValidCommandToken.matcher(finalName);
@@ -331,12 +331,12 @@ public class TelegramPlatform implements ISocialPlatform {
             .toList();
 
         return CompletableFuture
-            .allOf(languages.stream().map(x -> UpdateCommandSuggestions(x, commandInfos)).toArray(CompletableFuture[]::new))
-            .thenRun(() -> UpdateCommandSuggestions(null, commandInfos))
+            .allOf(languages.stream().map(x -> updateCommandSuggestions(x, commandInfos)).toArray(CompletableFuture[]::new))
+            .thenRun(() -> updateCommandSuggestions(null, commandInfos))
             .thenApply(Void -> true);
     }
 
-    private CompletableFuture<Boolean> UpdateCommandSuggestions(String languageCode, List<ImmutablePair<IBridgeModule, ISocialCommand>> commands) {
+    private CompletableFuture<Boolean> updateCommandSuggestions(String languageCode, List<ImmutablePair<ISocialModule, ISocialCommand>> commands) {
         if (getBotState() != BotState.Started) {
             return CompletableFuture.completedFuture(false);
         }
@@ -420,7 +420,7 @@ public class TelegramPlatform implements ISocialPlatform {
 
     @Override
     public CompletableFuture<SocialUser> tryGetUser(Identifier id) {
-        var cachedUser = userCaching.TryGet(x -> (long) x.getId().value() == (long) id.value());
+        var cachedUser = userCaching.tryGet(x -> (long) x.getId().value() == (long) id.value());
         if (cachedUser != null) {
             return CompletableFuture.completedFuture(cachedUser);
         }
@@ -441,7 +441,7 @@ public class TelegramPlatform implements ISocialPlatform {
             }
 
             var user = new TelegramUser(this, dbUser);
-            userCaching.CheckAndAdd(user); // second search on cache, maybe item has been added while async operates
+            userCaching.checkAndAdd(user); // second search on cache, maybe item has been added while async operates
             return user;
         });
     }

@@ -73,7 +73,7 @@ public class LongPollingHandler implements LongPollingSingleThreadUpdateConsumer
                 }
 
                 // Commands handling
-                if (TryCommandHandle(update, message, socialUser)) {
+                if (tryCommandHandle(update, message, socialUser)) {
                     return;
                 }
                 
@@ -86,7 +86,7 @@ public class LongPollingHandler implements LongPollingSingleThreadUpdateConsumer
             });
     }
 
-    private boolean TryCommandHandle(Update chatEvent, String message, SocialUser socialUser) {
+    private boolean tryCommandHandle(Update chatEvent, String message, SocialUser socialUser) {
         var argsReader = new StringReader(message);
 
         try {
