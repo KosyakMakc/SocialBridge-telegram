@@ -8,7 +8,6 @@ import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
 import java.util.List;
 
 public class English implements ITranslationSource {
-
     @Override
     public String getLanguage() {
         return LocalizationService.defaultLocale;
@@ -17,7 +16,7 @@ public class English implements ITranslationSource {
     @Override
     public List<LocalizationRecord> getRecords() {
         return List.of(
-                new LocalizationRecord(TelegramMessageKey.SET_TOKEN_DESCRIPTION.key(), "Setup new token of Telegram bot, existed bot also wil be reloaded with new token"),
+                new LocalizationRecord(TelegramMessageKey.SET_TOKEN_DESCRIPTION.key(), "Setup new token of Telegram bot, existed bot also will be reloaded with new token"),
                 new LocalizationRecord(TelegramMessageKey.SET_TOKEN_SUCCESS.key(), "<green>New token saved and applied.</green>"),
                 new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_CONFIG.key(), "<red>Failed to save token to configuration service.</red>"),
                 new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_STOP_BOT.key(), "<red>Failed to stop telegram bot, new token saved, but not applied.</red>"),
@@ -28,10 +27,6 @@ public class English implements ITranslationSource {
                 new LocalizationRecord(TelegramMessageKey.BOT_STATUS_CONNECTED.key(), "<green>Telegram bot successfully connected.</green>"),
                 new LocalizationRecord(TelegramMessageKey.BOT_STATUS_STOPPING.key(), "<yellow>Telegram bot are stopping...</yellow>"),
                 new LocalizationRecord(TelegramMessageKey.BOT_STATUS_STOPPED.key(), "<red>Telegram bot stopped.</red>")
-
-                // new LocalizationRecord(getLanguage(), TelegramMessageKey.BOT_STARTED.key(), "✅ Social bot connected!"),
-                // new LocalizationRecord(getLanguage(), TelegramMessageKey.BOT_STOPPED.key(), "❌ Social bot stopped!")
         );
     }
-
 }

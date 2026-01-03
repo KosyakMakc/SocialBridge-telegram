@@ -1,1 +1,1 @@
-include ':implementations:social-bridge-telegram-paper'
+include ':implementations:paper'

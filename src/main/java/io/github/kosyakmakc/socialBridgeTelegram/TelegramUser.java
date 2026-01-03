@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
 
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.message.Message;
@@ -38,8 +39,8 @@ public class TelegramUser extends SocialUser implements Comparable<TelegramUser>
     }
 
     @Override
-    public void sendMessage(String message, HashMap<String, String> placeholders) {
-        getPlatform().sendMessage(this, message, placeholders);
+    public CompletableFuture<Boolean> sendMessage(String message, HashMap<String, String> placeholders) {
+        return getPlatform().sendMessage(this, message, placeholders);
     }
 
     @Override
