@@ -21,7 +21,7 @@ repositories {
     }
 }
 dependencies {
-    compileOnly "io.github.kosyakmakc:SocialBridge-telegram:0.5.3"
+    compileOnly "io.github.kosyakmakc:SocialBridge-telegram:0.6.+"
 }
 ```
 
