@@ -100,14 +100,16 @@ public class TelegramUser extends SocialUser implements Comparable<TelegramUser>
             userRecord.setUpdatedAt(Date.from(Instant.now()));
             
             // non-blocking save user in background
-            ((TelegramPlatform) getPlatform()).getBridge().queryDatabase(ctx -> {
-                var table = ctx.getDaoTable(TelegramUserTable.class);
+            ((TelegramPlatform) getPlatform()).getBridge().queryDatabase(transaction -> {
+                var databaseContext = transaction.getDatabaseContext();
+
+                var table = databaseContext.getDaoTable(TelegramUserTable.class);
                 try {
                     table.update(userRecord);
-                    return true;
+                    return CompletableFuture.completedFuture(true);
                 } catch (SQLException e) {
                     e.printStackTrace();
-                    return false;
+                    return CompletableFuture.completedFuture(false);
                 }
             });
         }
