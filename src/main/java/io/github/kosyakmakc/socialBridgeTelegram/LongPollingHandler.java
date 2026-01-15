@@ -9,6 +9,7 @@ import io.github.kosyakmakc.socialBridgeTelegram.DatabaseTables.TelegramUserTabl
 import java.io.StringReader;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.concurrent.CompletableFuture;
 
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -40,14 +41,16 @@ public class LongPollingHandler implements LongPollingSingleThreadUpdateConsumer
                     socialUser = new TelegramUser(socialPlatform, dbUser);
 
                     // non-blocking save user in background
-                    socialPlatform.getBridge().queryDatabase(ctx -> {
-                        var table = ctx.getDaoTable(TelegramUserTable.class);
+                    socialPlatform.getBridge().queryDatabase(transaction -> {
+                        var databaseContext = transaction.getDatabaseContext();
+
+                        var table = databaseContext.getDaoTable(TelegramUserTable.class);
                         try {
                             table.createIfNotExists(dbUser);
-                            return true;
+                            return CompletableFuture.completedFuture(true);
                         } catch (SQLException e) {
                             e.printStackTrace();
-                            return false;
+                            return CompletableFuture.completedFuture(false);
                         }
                     });
                 }

@@ -3,6 +3,7 @@ package io.github.kosyakmakc.socialBridgeTelegram;
 import io.github.kosyakmakc.socialBridge.ISocialBridge;
 import io.github.kosyakmakc.socialBridge.ISocialModule;
 import io.github.kosyakmakc.socialBridge.Commands.SocialCommands.ISocialCommand;
+import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.Identifier;
@@ -56,7 +57,7 @@ public class TelegramPlatform implements ISocialPlatform {
 
     private final CacheContainer<TelegramUser> userCaching = new CacheContainer<>(500);
 
-    private final Version socialBridgeCompabilityVersion = new Version("0.6.0");
+    private final Version socialBridgeCompabilityVersion = new Version("0.8.0");
     private final TelegramBotsLongPollingApplication botsApplication = new TelegramBotsLongPollingApplication();
     
     private BotState botState = BotState.Stopped;
@@ -393,20 +394,22 @@ public class TelegramPlatform implements ISocialPlatform {
         this.bridge = socialBridge;
         logger = Logger.getLogger(this.bridge.getLogger().getName() + '.' + TelegramPlatform.class.getSimpleName());
 
-        var initTask = this.bridge.queryDatabase(ctx -> {
+        var initTask = this.bridge.queryDatabase(transaction -> {
+            var databaseContext = transaction.getDatabaseContext();
+
             try {
-                TableUtils.createTableIfNotExists(ctx.getConnectionSource(), TelegramUserTable.class);
-                var daoSession = ctx.registerTable(TelegramUserTable.class);
+                TableUtils.createTableIfNotExists(databaseContext.getConnectionSource(), TelegramUserTable.class);
+                var daoSession = databaseContext.registerTable(TelegramUserTable.class);
                 
                 if (daoSession == null) {
                     throw new RuntimeException("Failed to create required database table - " + TelegramUserTable.class.getSimpleName());
                 }
 
-                return true;
+                return CompletableFuture.completedFuture(true);
             } catch (SQLException e) {
                 e.printStackTrace();
                 this.bridge = null;
-                return false;
+                return CompletableFuture.completedFuture(false);
             }
         });
 
@@ -429,25 +432,39 @@ public class TelegramPlatform implements ISocialPlatform {
             return CompletableFuture.completedFuture(cachedUser);
         }
 
-        return this.bridge.queryDatabase(ctx -> {
-            var dao = ctx.getDaoTable(TelegramUserTable.class);
+        return this.bridge.queryDatabase(transaction -> getUserFromDatabase(id, transaction));
+    }
 
-            TelegramUserTable dbUser;
-            try {
-                dbUser = dao.queryForId((long) id.value());
-            } catch (SQLException e) {
-                e.printStackTrace();
-                dbUser = null;
-            }
+    @Override
+    public CompletableFuture<SocialUser> tryGetUser(Identifier id, ITransaction transaction) {
+        var cachedUser = userCaching.tryGet(x -> (long) x.getId().value() == (long) id.value());
+        if (cachedUser != null) {
+            return CompletableFuture.completedFuture(cachedUser);
+        }
 
-            if (dbUser == null) {
-                return null;
-            }
+        return getUserFromDatabase(id, transaction);
+    }
 
-            var user = new TelegramUser(this, dbUser);
-            userCaching.checkAndAdd(user); // second search on cache, maybe item has been added while async operates
-            return user;
-        });
+    private CompletableFuture<SocialUser> getUserFromDatabase(Identifier id, ITransaction transaction) {
+        var databaseContext = transaction.getDatabaseContext();
+
+        var dao = databaseContext.getDaoTable(TelegramUserTable.class);
+
+        TelegramUserTable dbUser;
+        try {
+            dbUser = dao.queryForId((long) id.value());
+        } catch (SQLException e) {
+            e.printStackTrace();
+            dbUser = null;
+        }
+
+        if (dbUser == null) {
+            return CompletableFuture.completedFuture(null);
+        }
+
+        var user = new TelegramUser(this, dbUser);
+        userCaching.checkAndAdd(user);
+        return CompletableFuture.completedFuture(user);
     }
 
     private TelegramModule getTelegramModule() {
