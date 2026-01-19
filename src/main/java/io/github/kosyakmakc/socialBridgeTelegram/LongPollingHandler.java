@@ -60,7 +60,7 @@ public class LongPollingHandler implements LongPollingSingleThreadUpdateConsumer
                 if (socialUser instanceof TelegramUser telegramUser) {
                     telegramUser.setLastMessage(tgMessage);
 
-                    var isChanged = telegramUser.TryActualize(tgUser);
+                    var isChanged = telegramUser.tryActualize(tgUser);
                     if (isChanged) {
                         socialPlatform.getLogger().info("telegram user info updated (id " + longId + " - " + telegramUser.getName() + ")");
                     }
