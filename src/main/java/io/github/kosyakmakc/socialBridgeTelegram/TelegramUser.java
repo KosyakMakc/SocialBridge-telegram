@@ -76,22 +76,30 @@ public class TelegramUser extends SocialUser implements Comparable<TelegramUser>
         return userRecord;
     }
 
-    public boolean TryActualize(User tgUser) {
+    boolean isNullOrBlank (String str) {
+        return str == null || str.isBlank();
+    }
+
+    public boolean tryActualize(User tgUser) {
         var changed = false;
 
-        if (userRecord.getUsername() != tgUser.getUserName()) {
+        if (!isNullOrBlank(tgUser.getUserName())
+         && !tgUser.getUserName().equals(userRecord.getUsername())) {
             userRecord.setUsername(tgUser.getUserName());
             changed = true;
         }
-        if (userRecord.getFirstName() != tgUser.getFirstName()) {
+        if (!isNullOrBlank(tgUser.getFirstName())
+         && !tgUser.getFirstName().equals(userRecord.getFirstName())) {
             userRecord.setFirstName(tgUser.getFirstName());
             changed = true;
         }
-        if (userRecord.getLastName() != tgUser.getLastName()) {
+        if (!isNullOrBlank(tgUser.getLastName())
+         && !tgUser.getLastName().equals(userRecord.getLastName())) {
             userRecord.setLastName(tgUser.getLastName());
             changed = true;
         }
-        if (userRecord.getLocalization() != tgUser.getLanguageCode()) {
+        if (!isNullOrBlank(tgUser.getLanguageCode())
+         && !tgUser.getLanguageCode().equals(userRecord.getLocalization())) {
             userRecord.setLocalization(tgUser.getLanguageCode());
             changed = true;
         }
