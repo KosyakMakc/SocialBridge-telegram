@@ -4,4 +4,5 @@ main: io.github.kosyakmakc.socialBridgeTelegram.paper.SocialBridgeTelegramPlugin
 api-version: '1.21'
 authors: [ kosyakmakc ]
 depend: [ SocialBridge ]
+softdepend: [ tgbridge ]
 folia-supported: true
