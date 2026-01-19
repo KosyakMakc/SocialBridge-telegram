@@ -57,7 +57,7 @@ public class TelegramPlatform implements ISocialPlatform {
 
     private final CacheContainer<TelegramUser> userCaching = new CacheContainer<>(500);
 
-    private final Version socialBridgeCompabilityVersion = new Version("0.8.0");
+    private final Version socialBridgeCompabilityVersion = new Version("0.8.1");
     private final TelegramBotsLongPollingApplication botsApplication = new TelegramBotsLongPollingApplication();
     
     private BotState botState = BotState.Stopped;
