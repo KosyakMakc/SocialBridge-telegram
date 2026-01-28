@@ -1,6 +1,5 @@
 package io.github.kosyakmakc.socialBridgeTelegram;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
-import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.Identifier;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.IdentifierType;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.SocialUser;
@@ -13,15 +12,12 @@ import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
 import org.telegram.telegrambots.meta.api.objects.User;
-import org.telegram.telegrambots.meta.api.objects.message.Message;
 
 public class TelegramUser extends SocialUser implements Comparable<TelegramUser> {
     private final TelegramUserTable userRecord;
     private final Identifier id;
-    
-    private Message lastMessage;
 
-    public TelegramUser(ISocialPlatform socialPlatform, TelegramUserTable userRecord) {
+    public TelegramUser(TelegramPlatform socialPlatform, TelegramUserTable userRecord) {
         super(socialPlatform);
         this.userRecord = userRecord;
         this.id = new Identifier(IdentifierType.Long, userRecord.getId());
@@ -40,7 +36,7 @@ public class TelegramUser extends SocialUser implements Comparable<TelegramUser>
 
     @Override
     public CompletableFuture<Boolean> sendMessage(String message, HashMap<String, String> placeholders) {
-        return getPlatform().sendMessage(this, message, placeholders);
+        return ((TelegramPlatform) getPlatform()).sendMessage(this, message, placeholders);
     }
 
     @Override
@@ -52,14 +48,6 @@ public class TelegramUser extends SocialUser implements Comparable<TelegramUser>
     @Override
     public Identifier getId() {
         return id;
-    }
-
-    public void setLastMessage(Message lastMessage) {
-        this.lastMessage = lastMessage;
-    }
-
-    public Message getLastMessage() {
-        return lastMessage;
     }
 
     @Override
@@ -108,7 +96,7 @@ public class TelegramUser extends SocialUser implements Comparable<TelegramUser>
             userRecord.setUpdatedAt(Date.from(Instant.now()));
             
             // non-blocking save user in background
-            ((TelegramPlatform) getPlatform()).getBridge().queryDatabase(transaction -> {
+            ((TelegramPlatform) getPlatform()).getBridge().doTransaction(transaction -> {
                 var databaseContext = transaction.getDatabaseContext();
 
                 var table = databaseContext.getDaoTable(TelegramUserTable.class);

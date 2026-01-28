@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCommandBase;
-import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
+import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCommandExecutionContext;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridgeTelegram.TelegramModule;
 import io.github.kosyakmakc.socialBridgeTelegram.TelegramPlatform;
@@ -18,7 +18,8 @@ public class Status extends MinecraftCommandBase {
     }
 
     @Override
-    public void execute(MinecraftUser sender, List<Object> args) {
+    public void execute(MinecraftCommandExecutionContext ctx, List<Object> args) {
+        var sender = ctx.getSender();
         var platform = getBridge().getSocialPlatform(TelegramPlatform.class);
         MessageKey messageKey;
         switch (platform.getBotState()) {
@@ -40,7 +41,7 @@ public class Status extends MinecraftCommandBase {
         }
         getBridge()
             .getLocalizationService()
-            .getMessage(getBridge().getModule(TelegramModule.class), sender.getLocale(), messageKey)
+            .getMessage(getBridge().getModule(TelegramModule.class), sender.getLocale(), messageKey, null)
             .thenAccept(msgTemplate -> sender.sendMessage(msgTemplate, new HashMap<String, String>()));
     }
 

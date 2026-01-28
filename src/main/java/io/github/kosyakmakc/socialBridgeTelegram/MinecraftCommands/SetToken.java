@@ -6,7 +6,7 @@ import java.util.concurrent.CompletableFuture;
 
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCommandBase;
-import io.github.kosyakmakc.socialBridge.MinecraftPlatform.MinecraftUser;
+import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCommandExecutionContext;
 import io.github.kosyakmakc.socialBridgeTelegram.TelegramModule;
 import io.github.kosyakmakc.socialBridgeTelegram.TelegramPlatform;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramMessageKey;
@@ -20,16 +20,18 @@ public class SetToken extends MinecraftCommandBase {
     }
 
     @Override
-    public void execute(MinecraftUser sender, List<Object> parameters) {
+    public void execute(MinecraftCommandExecutionContext ctx, List<Object> parameters) {
+        var sender = ctx.getSender();
+
         var module = getBridge().getModule(TelegramModule.class);
         var token = (String) parameters.get(0);
         var placeholders = new HashMap<String, String>();
         if (validateToken(token)) {
-            var setupTask = this.getBridge().getSocialPlatform(TelegramPlatform.class).setupToken(token);
+            var setupTask = this.getBridge().getSocialPlatform(TelegramPlatform.class).setupToken(token, null);
 
             setupTask
                 .thenCompose(isSuccess ->
-                    getBridge().getLocalizationService().getMessage(module, sender.getLocale(), TelegramMessageKey.SET_TOKEN_SUCCESS))
+                    getBridge().getLocalizationService().getMessage(module, sender.getLocale(), TelegramMessageKey.SET_TOKEN_SUCCESS, null))
                 .thenAccept(msgTemplate ->
                     sender.sendMessage(msgTemplate, placeholders));
 
@@ -37,7 +39,7 @@ public class SetToken extends MinecraftCommandBase {
                 .exceptionally(err -> {
                     CompletableFuture<String> task;
                     if (err instanceof TranslationException translationException) {
-                        task = getBridge().getLocalizationService().getMessage(module, sender.getLocale(), translationException.getMessageKey());
+                        task = getBridge().getLocalizationService().getMessage(module, sender.getLocale(), translationException.getMessageKey(), null);
                     } else {
                         task = CompletableFuture.completedFuture(err.getMessage());
                     }
