@@ -48,8 +48,8 @@ public class TelegramSocialMessage implements ISocialMessage {
     @Override
     public Identifier getChannelId() {
         var chatId = telegramMessage.getChatId();
-        var topicId = telegramMessage.getMessageThreadId();
-        return new Identifier(IdentifierType.String, chatId + '/' + topicId);
+        // var topicId = telegramMessage.getMessageThreadId();
+        return new Identifier(IdentifierType.Long, chatId); //  + '/' + topicId
     }
 
     @Override

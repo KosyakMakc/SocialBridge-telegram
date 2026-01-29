@@ -94,18 +94,38 @@ public class TelegramPlatform implements ISocialPlatform {
                         telegramHandler = new LongPollingHandler(this);
                         botsApplication.registerBot(token, telegramHandler);
                         usingToken = token;
-
-                        var userBot = telegramClient.execute(new GetMe());
-                        telegramHandler.setBotUsername(userBot.getUserName());
-
-                        botState = BotState.Started;
-                        logger.info("Telegram bot connected");
                     } catch (TelegramApiException e) {
                         e.printStackTrace();
+
+                        try {
+                            botsApplication.unregisterBot(token);
+                        } catch (TelegramApiException notUsed) { }
+
                         return false;
                     }
                     return true;
                 });
+        })
+        .thenComposeAsync(isSuccessStart -> {
+            if (isSuccessStart) {
+                return withRetries(() -> {
+                    try {
+                        var userBot = telegramClient.execute(new GetMe());
+                        telegramHandler.setBotUsername(userBot.getUserName());
+                        
+                        botState = BotState.Started;
+                        logger.info("Telegram bot connected");
+                    } catch (TelegramApiException e) {
+                        e.printStackTrace();
+
+                        return false;
+                    }
+                    return true;
+                });
+            }
+            else {
+                return CompletableFuture.completedFuture(false);
+            }
         })
         .thenComposeAsync(isSuccessStart -> {
             if (isSuccessStart) {
@@ -272,7 +292,7 @@ public class TelegramPlatform implements ISocialPlatform {
         }
         var message = BuildTemplateMessage(template, placeholders);
 
-        var msg = new SendMessage(telegramUser.getUserRecord().getUsername(), message);
+        var msg = new SendMessage(Long.toString(telegramUser.getUserRecord().getId()), message);
         msg.setParseMode(ParseMode.HTML);
 
         return withRetries(() -> {
@@ -323,14 +343,15 @@ public class TelegramPlatform implements ISocialPlatform {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                }
 
-                    retryCounter++;
-                    try {
-                        Thread.sleep(Duration.ofSeconds((int) Math.pow(delay, retryCounter)));
-                    } catch (InterruptedException e1) {
-                        e1.printStackTrace();
-                        return false;
-                    }
+                retryCounter++;
+                try {
+                    var delaySeconds = (int) Math.pow(delay, retryCounter);
+                    Thread.sleep(Duration.ofSeconds(delaySeconds));
+                } catch (InterruptedException e1) {
+                    e1.printStackTrace();
+                    return false;
                 }
             }
             return false;
