@@ -70,7 +70,7 @@ public class LongPollingHandler implements LongPollingSingleThreadUpdateConsumer
             }
         } catch (ArgumentFormatException e) {
             e.logTo(socialPlatform.getBridge().getLogger());
-            socialPlatform.sendMessage(commandCtx.getSender(), e.getMessage(), new HashMap<String, String>());
+            commandCtx.getSender().thenAccept(socialUser -> socialPlatform.sendMessage(socialUser, e.getMessage(), new HashMap<String, String>()));
             return true;
         }
         return false;

@@ -10,6 +10,7 @@ import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialMessage;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.Identifier;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.SocialUser;
+import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.github.kosyakmakc.socialBridgeTelegram.DatabaseTables.TelegramUserTable;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.CacheContainer;
@@ -59,7 +60,7 @@ public class TelegramPlatform implements ISocialPlatform {
 
     private final CacheContainer<TelegramUser> userCaching = new CacheContainer<>(500);
 
-    private final Version socialBridgeCompabilityVersion = new Version("0.10.0");
+    private final Version socialBridgeCompabilityVersion = new Version("0.10.1");
     private final TelegramBotsLongPollingApplication botsApplication = new TelegramBotsLongPollingApplication();
     
     private BotState botState = BotState.Stopped;
@@ -259,6 +260,14 @@ public class TelegramPlatform implements ISocialPlatform {
         });
     }
 
+    @Override
+    public CompletableFuture<Boolean> sendMessage(Identifier channelId, MessageKey message, String locale, HashMap<String, String> placeholders, ITransaction transaction) {
+        return bridge
+            .getLocalizationService()
+            .getMessage(locale, message, transaction)
+            .thenCompose(templateMessage -> sendMessage(channelId, templateMessage, placeholders));
+    }
+
     public CompletableFuture<Boolean> sendReply(ISocialMessage socialMessage, String template, HashMap<String, String> placeholders) {
         if (!(socialMessage instanceof TelegramSocialMessage telegramMessage)) {
             throw new RuntimeException("Social message from another SocialPlatform, please provide messages from this SocialPlatform");
@@ -434,7 +443,7 @@ public class TelegramPlatform implements ISocialPlatform {
                                             : LocalizationService.defaultLocale;
 
                 return bridge.getLocalizationService()
-                    .getMessage(pair.left, localizationLanguage, pair.right.getDescription(), null)
+                    .getMessage(localizationLanguage, pair.right.getDescription(), null)
                     .thenApply(description -> new BotCommand(finalName, description));
             })
             .toArray(CompletableFuture[]::new);

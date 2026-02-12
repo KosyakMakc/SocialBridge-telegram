@@ -4,6 +4,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import io.github.kosyakmakc.socialBridge.SocialBridge;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IModuleLoader;
+import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.github.kosyakmakc.socialBridgeTelegram.TelegramPlatform;
 import io.github.kosyakmakc.socialBridgeTelegram.TelegramModule;
 
@@ -13,7 +14,7 @@ public class SocialBridgeTelegramPlugin extends JavaPlugin implements IModuleLoa
     
     public SocialBridgeTelegramPlugin() {
         platform = new TelegramPlatform();
-        module = new TelegramModule(this);
+        module = new TelegramModule(this, new Version(this.getPluginMeta().getVersion()));
 
         SocialBridge.INSTANCE.connectModule(module).join();
         SocialBridge.INSTANCE.connectSocialPlatform(platform).join();

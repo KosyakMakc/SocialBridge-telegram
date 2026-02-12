@@ -1,8 +1,10 @@
 package io.github.kosyakmakc.socialBridgeTelegram;
+import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.Identifier;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.IdentifierType;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.SocialUser;
+import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridgeTelegram.DatabaseTables.TelegramUserTable;
 
 import java.sql.SQLException;
@@ -37,6 +39,15 @@ public class TelegramUser extends SocialUser implements Comparable<TelegramUser>
     @Override
     public CompletableFuture<Boolean> sendMessage(String message, HashMap<String, String> placeholders) {
         return ((TelegramPlatform) getPlatform()).sendMessage(this, message, placeholders);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> sendMessage(MessageKey message, String locale, HashMap<String, String> placeholders, ITransaction transaction) {
+        return getPlatform()
+            .getBridge()
+            .getLocalizationService()
+            .getMessage(locale, message, transaction)
+            .thenCompose(messageTemplate -> sendMessage(messageTemplate, placeholders));
     }
 
     @Override
