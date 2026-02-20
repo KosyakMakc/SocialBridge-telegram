@@ -1,0 +1,21 @@
+package io.github.kosyakmakc.socialBridgeTelegram.SocialCommands;
+
+import java.util.HashMap;
+import java.util.List;
+
+import io.github.kosyakmakc.socialBridge.Commands.SocialCommands.SocialCommandBase;
+import io.github.kosyakmakc.socialBridge.Commands.SocialCommands.SocialCommandExecutionContext;
+import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
+
+public class HeartbeatCommand extends SocialCommandBase {
+
+    public HeartbeatCommand() {
+        super("heartbeat", MessageKey.EMPTY);
+    }
+
+    @Override
+    public void execute(SocialCommandExecutionContext ctx, List<Object> args) {
+        ctx.getSocialMessage().sendReply("✅", new HashMap<>());
+    }
+
+}

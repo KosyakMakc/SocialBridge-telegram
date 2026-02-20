@@ -2,12 +2,10 @@ package io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCommandBase;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCommandExecutionContext;
-import io.github.kosyakmakc.socialBridgeTelegram.TelegramModule;
 import io.github.kosyakmakc.socialBridgeTelegram.TelegramPlatform;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramMessageKey;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramPermissions;
@@ -23,31 +21,21 @@ public class SetToken extends MinecraftCommandBase {
     public void execute(MinecraftCommandExecutionContext ctx, List<Object> parameters) {
         var sender = ctx.getSender();
 
-        var module = getBridge().getModule(TelegramModule.class);
         var token = (String) parameters.get(0);
         var placeholders = new HashMap<String, String>();
         if (validateToken(token)) {
             var setupTask = this.getBridge().getSocialPlatform(TelegramPlatform.class).setupToken(token, null);
 
-            setupTask
-                .thenCompose(isSuccess ->
-                    getBridge().getLocalizationService().getMessage(module, sender.getLocale(), TelegramMessageKey.SET_TOKEN_SUCCESS, null))
-                .thenAccept(msgTemplate ->
-                    sender.sendMessage(msgTemplate, placeholders));
+            setupTask.thenCompose(isSuccess -> sender.sendMessage(TelegramMessageKey.SET_TOKEN_SUCCESS, sender.getLocale(), placeholders, null));
 
             setupTask
                 .exceptionally(err -> {
-                    CompletableFuture<String> task;
                     if (err instanceof TranslationException translationException) {
-                        task = getBridge().getLocalizationService().getMessage(module, sender.getLocale(), translationException.getMessageKey(), null);
+                        sender.sendMessage(translationException.getMessageKey(), sender.getLocale(), placeholders, null);
                     } else {
-                        task = CompletableFuture.completedFuture(err.getMessage());
+                        sender.sendMessage(err.getMessage(), placeholders);
                     }
 
-                    task.thenAccept(msgTemplate -> {
-                        sender.sendMessage(msgTemplate, placeholders);
-                    });
-                    
                     return true; // not used, just for close signature of lambda
                 });
         }

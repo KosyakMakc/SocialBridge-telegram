@@ -6,6 +6,7 @@ import io.github.kosyakmakc.socialBridge.Commands.Arguments.ArgumentFormatExcept
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
 import io.github.kosyakmakc.socialBridge.Commands.SocialCommands.SocialCommandExecutionContext;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialMessage;
+import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
 
 public class TelegramSocialCommandExecutionContext extends SocialCommandExecutionContext {
     private static final CommandArgument<String> systemWordArgument = CommandArgument.ofWord("/{botSuffix}-{commandLiteral} [arguments, ...]");
@@ -71,5 +72,10 @@ public class TelegramSocialCommandExecutionContext extends SocialCommandExecutio
 
     public String getArguments() {
         return arguments;
+    }
+
+    @Override
+    public ISocialPlatform getSocialPlatform() {
+        return getSocialMessage().getSocialPlatform();
     }
 }

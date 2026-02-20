@@ -8,19 +8,21 @@ import java.util.concurrent.CompletableFuture;
 
 import org.telegram.telegrambots.meta.api.objects.message.Message;
 
+import io.github.kosyakmakc.socialBridge.ITransaction;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialAttachment;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialMessage;
+import io.github.kosyakmakc.socialBridge.SocialPlatforms.ISocialPlatform;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.Identifier;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.IdentifierType;
 import io.github.kosyakmakc.socialBridge.SocialPlatforms.SocialUser;
+import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridgeTelegram.DatabaseTables.TelegramUserTable;
 
 public class TelegramSocialMessage implements ISocialMessage {
     private final TelegramPlatform socialPlatform;
     private final Message telegramMessage;
     private final LinkedList<ISocialAttachment> attachments = new LinkedList<>();
-    private SocialUser socialUser;
-    private boolean socialUserLoaded = false;
+    private CompletableFuture<SocialUser> socialUserLoading;
 
     public TelegramSocialMessage(TelegramPlatform socialPlatform, Message telegramMessage) {
         this.socialPlatform = socialPlatform;
@@ -38,11 +40,11 @@ public class TelegramSocialMessage implements ISocialMessage {
     }
 
     @Override
-    public SocialUser getAuthor() {
-        if (!socialUserLoaded) {
-            loadSocialUser().join();
+    public CompletableFuture<SocialUser> getAuthor() {
+        if (socialUserLoading == null) {
+            socialUserLoading = loadSocialUser();
         }
-        return socialUser;
+        return socialUserLoading;
     }
 
     @Override
@@ -66,7 +68,7 @@ public class TelegramSocialMessage implements ISocialMessage {
         return telegramMessage.getText();
     }
 
-    private CompletableFuture<Void> loadSocialUser() {
+    private CompletableFuture<SocialUser> loadSocialUser() {
         var tgUser = telegramMessage.getFrom();
         var longId = tgUser.getId();
         var identifier = new Identifier(IdentifierType.Long, longId);
@@ -94,8 +96,6 @@ public class TelegramSocialMessage implements ISocialMessage {
             })
             .thenApply(socialUser -> {
                 if (socialUser instanceof TelegramUser telegramUser) {
-                    // telegramUser.setLastMessage(tgMessage);
-
                     var isChanged = telegramUser.tryActualize(tgUser);
                     if (isChanged) {
                         socialPlatform.getLogger().info("telegram user info updated (id " + longId + " - " + telegramUser.getName() + ")");
@@ -103,15 +103,25 @@ public class TelegramSocialMessage implements ISocialMessage {
                 }
 
                 return socialUser;
-            })
-            .thenAccept(socialUser -> {
-                this.socialUser = socialUser;
-                this.socialUserLoaded = true;
             });
     }
 
     @Override
     public CompletableFuture<Boolean> sendReply(String messageTemplate, HashMap<String, String> placeholders) {
         return socialPlatform.sendReply(this, messageTemplate, placeholders);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> sendReply(MessageKey message, String locale, HashMap<String, String> placeholders, ITransaction transaction) {
+        return socialPlatform
+            .getBridge()
+            .getLocalizationService()
+            .getMessage(locale, message, transaction)
+            .thenCompose(messageTemplate -> sendReply(messageTemplate, placeholders));
+    }
+
+    @Override
+    public ISocialPlatform getSocialPlatform() {
+        return socialPlatform;
     }
 }

@@ -17,19 +17,11 @@ repositories {
 dependencies {
     compileOnly "com.j256.ormlite:ormlite-core:6.1"
     compileOnly "com.j256.ormlite:ormlite-jdbc:6.1"
-    compileOnly "io.github.kosyakmakc:SocialBridge:0.9.1"
+    compileOnly "io.github.kosyakmakc:SocialBridge:0.10.1"
     implementation("net.kyori:adventure-text-minimessage:4.25.0")
     // https://github.com/rubenlagus/TelegramBots
     implementation 'org.telegram:telegrambots-longpolling:9.2.0'
     implementation 'org.telegram:telegrambots-client:9.2.0'
-
-    testImplementation "com.j256.ormlite:ormlite-core:6.1"
-    testImplementation "com.j256.ormlite:ormlite-jdbc:6.1"
-    testImplementation "io.github.kosyakmakc:SocialBridge:0.9.1"
-
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 def targetJavaVersion = 21

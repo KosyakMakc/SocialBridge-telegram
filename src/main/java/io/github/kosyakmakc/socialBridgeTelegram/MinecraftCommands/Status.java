@@ -6,7 +6,6 @@ import java.util.List;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCommandBase;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCommandExecutionContext;
 import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
-import io.github.kosyakmakc.socialBridgeTelegram.TelegramModule;
 import io.github.kosyakmakc.socialBridgeTelegram.TelegramPlatform;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramMessageKey;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramPermissions;
@@ -39,10 +38,7 @@ public class Status extends MinecraftCommandBase {
                 throw new RuntimeException("Unexpected telegram bot state");
 
         }
-        getBridge()
-            .getLocalizationService()
-            .getMessage(getBridge().getModule(TelegramModule.class), sender.getLocale(), messageKey, null)
-            .thenAccept(msgTemplate -> sender.sendMessage(msgTemplate, new HashMap<String, String>()));
+        sender.sendMessage(messageKey, sender.getLocale(), new HashMap<String, String>(), null);
     }
 
 }

@@ -70,7 +70,7 @@ public class LongPollingHandler implements LongPollingSingleThreadUpdateConsumer
             }
         } catch (ArgumentFormatException e) {
             e.logTo(socialPlatform.getBridge().getLogger());
-            socialPlatform.sendMessage(commandCtx.getSender(), e.getMessage(), new HashMap<String, String>());
+            commandCtx.getSocialMessage().sendReply(e.getMessage(), new HashMap<String, String>());
             return true;
         }
         return false;
@@ -78,5 +78,9 @@ public class LongPollingHandler implements LongPollingSingleThreadUpdateConsumer
 
     public void setBotUsername(String userName) {
         botUsername = userName;
+    }
+
+    public String getBotName() {
+        return botUsername;
     }
 }
