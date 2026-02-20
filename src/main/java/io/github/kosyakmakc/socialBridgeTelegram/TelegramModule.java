@@ -5,8 +5,10 @@ import java.util.UUID;
 import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IModuleLoader;
 import io.github.kosyakmakc.socialBridge.Modules.SocialModule;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
+import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.GetBotLinkCommand;
 import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.SetToken;
 import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.Status;
+import io.github.kosyakmakc.socialBridgeTelegram.SocialCommands.HeartbeatCommand;
 import io.github.kosyakmakc.socialBridgeTelegram.Translations.English;
 import io.github.kosyakmakc.socialBridgeTelegram.Translations.Russian;
 
@@ -20,6 +22,9 @@ public class TelegramModule extends SocialModule {
 
         addMinecraftCommand(new SetToken());
         addMinecraftCommand(new Status());
+        addMinecraftCommand(new GetBotLinkCommand());
+
+        addSocialCommand(new HeartbeatCommand());
 
         addTranslationSource(new English());
         addTranslationSource(new Russian());

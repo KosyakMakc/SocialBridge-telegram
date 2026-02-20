@@ -417,8 +417,13 @@ public class TelegramPlatform implements ISocialPlatform {
                     return null;
                 }
 
+                if (pair.right.getDescription() == MessageKey.EMPTY) {
+                    return null;
+                }
+
                 return pair;
             })
+            .filter(x -> x != null)
             .toList();
 
         return CompletableFuture
@@ -557,6 +562,10 @@ public class TelegramPlatform implements ISocialPlatform {
         }
 
         return module;
+    }
+
+    public String getBotName() {
+        return telegramHandler.getBotName();
     }
 
     public Logger getLogger() {

@@ -2,7 +2,6 @@ package io.github.kosyakmakc.socialBridgeTelegram.Translations;
 
 import java.util.List;
 
-import io.github.kosyakmakc.socialBridge.DatabasePlatform.LocalizationService;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.DefaultTranslations.ITranslationSource;
 import io.github.kosyakmakc.socialBridge.DatabasePlatform.DefaultTranslations.LocalizationRecord;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramMessageKey;
@@ -10,7 +9,7 @@ import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramMessageKey;
 public class Russian implements ITranslationSource {
     @Override
     public String getLanguage() {
-        return LocalizationService.defaultLocale;
+        return "ru";
     }
 
     @Override

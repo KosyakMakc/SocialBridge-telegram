@@ -5,10 +5,17 @@
 
 ### Commands for minecraft:
 
-| Command literal    | Permission node                 | Description                                                                   |
-|--------------------|---------------------------------|-------------------------------------------------------------------------------|
-| /telegram setToken | SocialBridge.telegram.setToken  | Save new token to SocialBridge configuration and reconnect bot with new token |
-| /telegram status   | SocialBridge.telegram.status    | Provide information about current connection bot to telegram                  |
+| Command literal      | Permission node                  | Description                                                                   |
+|----------------------|----------------------------------|-------------------------------------------------------------------------------|
+| /telegram setToken   | SocialBridge.telegram.setToken   | Save new token to SocialBridge configuration and reconnect bot with new token |
+| /telegram status     | SocialBridge.telegram.status     | Provide information about current connection bot to telegram                  |
+| /telegram getBotLink | SocialBridge.telegram.getBotLink | Get direct link to this bot if token exist and bot connected                  |
+
+### Commands for Telegram:
+
+| Command literal      | Description                                                                   |
+|----------------------|-------------------------------------------------------------------------------|
+| /telegram_heartbeat  | Check activity bot in Telegram |
 
 ## API for developers
 
@@ -25,4 +32,5 @@ dependencies {
 }
 ```
 
+### via `ISocialBridge.getSocialPlatform(TelegramModule.class)` you can access built-in module and use API (Recommended)
 ### via `ISocialBridge.getSocialPlatform(TelegramPlatform.class)` you can access this connector and use telegram-specific API
