@@ -5,11 +5,12 @@
 
 ### Commands for minecraft:
 
-| Command literal      | Permission node                  | Description                                                                   |
-|----------------------|----------------------------------|-------------------------------------------------------------------------------|
-| /telegram setToken   | SocialBridge.telegram.setToken   | Save new token to SocialBridge configuration and reconnect bot with new token |
-| /telegram status     | SocialBridge.telegram.status     | Provide information about current connection bot to telegram                  |
-| /telegram getBotLink | SocialBridge.telegram.getBotLink | Get direct link to this bot if token exist and bot connected                  |
+| Command literal      | Permission node                  | Description                                                                          |
+|----------------------|----------------------------------|--------------------------------------------------------------------------------------|
+| /telegram setupToken | SocialBridge.telegram.setToken   | Save new token to SocialBridge configuration and reconnect bot with new token |
+| /telegram status     | SocialBridge.telegram.status     | Provide information about current connection bot to telegram |
+| /telegram getBotLink | SocialBridge.telegram.getBotLink | Get direct link to this bot if token exist and bot connected |
+| /telegram setupProxy | SocialBridge.telegram.setProxy   | Save new proxy config to SocialBridge configuration and reconnect bot with new proxy (type://username:password@host:port, where type is http or socks) |
 
 ### Commands for social platforms:
 
