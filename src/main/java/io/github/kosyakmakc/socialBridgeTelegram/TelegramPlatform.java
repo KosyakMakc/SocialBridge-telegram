@@ -218,7 +218,9 @@ public class TelegramPlatform implements ISocialPlatform {
     }
 
     public CompletableFuture<Boolean> setupProxy(ProxyDefinition proxy, ITransaction transaction) {
-        var saveConfigTask =  setupProxyConfig(proxy.toString(), transaction)
+        var tgModule = getTelegramModule();
+
+        var saveConfigTask = getBridge().getConfigurationService().set(tgModule, configurationPathProxyConfig, proxy.toString(), transaction)
                              .thenCompose(isSuccess -> isSuccess ? CompletableFuture.completedFuture(isSuccess) : CompletableFuture.failedFuture(new TranslationException(TelegramMessageKey.SET_PROXY_FAILED_CONFIG)));
 
         var stoppingTask = saveConfigTask
@@ -275,11 +277,6 @@ public class TelegramPlatform implements ISocialPlatform {
                       return defaultRetryDelay;
                   }
               });
-    }
-
-    public CompletableFuture<Boolean> setupProxyConfig(String proxyDefinition, ITransaction transaction) {
-        var tgModule = getTelegramModule();
-        return getBridge().getConfigurationService().set(tgModule, configurationPathProxyConfig, proxyDefinition, transaction);
     }
 
     private CompletableFuture<String> getProxyConfig(ITransaction transaction) {
