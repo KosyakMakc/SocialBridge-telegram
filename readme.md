@@ -11,7 +11,7 @@
 | /telegram status     | SocialBridge.telegram.status     | Provide information about current connection bot to telegram                  |
 | /telegram getBotLink | SocialBridge.telegram.getBotLink | Get direct link to this bot if token exist and bot connected                  |
 
-### Commands for Telegram:
+### Commands for social platforms:
 
 | Command literal      | Description                                                                   |
 |----------------------|-------------------------------------------------------------------------------|
