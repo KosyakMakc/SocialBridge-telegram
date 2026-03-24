@@ -10,13 +10,26 @@ public class ProxyDefinition {
         Proxy.Type.HTTP, 443
     );
 
+    public static ProxyDefinition getDefault() {
+        return new ProxyDefinition();
+    }
+
     Proxy.Type proxyType;
     String username;
     String password;
     String hostname;
     int port;
+    
+    private ProxyDefinition() {
+        this.proxyType = Proxy.Type.DIRECT;
+        this.username = "";
+        this.password = "";
+        this.hostname = "";
+        this.port = -1;
+        return;
+    }
 
-    public ProxyDefinition(String definition) {
+    public ProxyDefinition(String definition) throws ProxyDefinitionFormatException {
         if (definition.isBlank()) {
             this.proxyType = Proxy.Type.DIRECT;
             this.username = "";
@@ -69,23 +82,22 @@ public class ProxyDefinition {
             try {
                 this.port = Integer.parseInt(definition.substring(hostSeparatorIndex + 1, definition.length()));
                 if (this.port < 1 || port > 65535) {
-                    throw new RuntimeException("Bad port number");
+                    throw new NumberFormatException("Bad port number");
                 }
             }
-            catch (Exception e) {
-                throw new NumberFormatException("Bad port number");
+            catch (NumberFormatException e) {
+                throw new ProxyDefinitionFormatException("Bad port number");
             }
         }
     }
 
-    private Type recognizeType(String rawProxyType) {
+    private Type recognizeType(String rawProxyType) throws ProxyDefinitionFormatException {
         for (var proxyTypeItem : Proxy.Type.values()) {
             if (proxyTypeItem.name().equalsIgnoreCase(rawProxyType)) {
                 return proxyTypeItem;
             }
         }
-
-        return Proxy.Type.DIRECT;
+        throw new ProxyDefinitionFormatException("Unrecognized proxy type");
     }
 
     public Proxy.Type getType() {

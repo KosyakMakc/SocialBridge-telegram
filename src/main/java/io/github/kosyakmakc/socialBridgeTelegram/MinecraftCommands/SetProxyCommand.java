@@ -8,6 +8,7 @@ import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCom
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCommandExecutionContext;
 import io.github.kosyakmakc.socialBridgeTelegram.TelegramPlatform;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.ProxyDefinition;
+import io.github.kosyakmakc.socialBridgeTelegram.Utils.ProxyDefinitionFormatException;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramMessageKey;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramPermissions;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TranslationException;
@@ -45,7 +46,7 @@ public class SetProxyCommand extends MinecraftCommandBase {
                 return true; // not used, just for close signature of lambda
             });
         }
-        catch (NumberFormatException e) {
+        catch (ProxyDefinitionFormatException e) {
             sender.sendMessage("please provide valid proxy definition (type://username:password@hostname:port)", placeholders);
         }
     }

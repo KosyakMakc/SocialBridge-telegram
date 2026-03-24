@@ -15,6 +15,7 @@ import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.github.kosyakmakc.socialBridgeTelegram.DatabaseTables.TelegramUserTable;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.CacheContainer;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.ProxyDefinition;
+import io.github.kosyakmakc.socialBridgeTelegram.Utils.ProxyDefinitionFormatException;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramMessageKey;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TranslationException;
 import net.kyori.adventure.text.Component;
@@ -97,7 +98,13 @@ public class TelegramPlatform implements ISocialPlatform {
         botState = BotState.Starting;
         return getProxyConfig(null)
             .thenCompose(x -> {
-                proxy.set(new ProxyDefinition(x));
+                try {
+                    proxy.set(new ProxyDefinition(x));
+                } catch (ProxyDefinitionFormatException e) {
+                    e.printStackTrace();
+                    logger.warning("Detected bad proxy config in configuration service, default proxy will be used.");
+                    proxy.set(ProxyDefinition.getDefault());
+                }
                 return getTgToken(null);
             })
             .thenCompose(token -> {
