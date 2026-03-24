@@ -152,7 +152,12 @@ public class TelegramPlatform implements ISocialPlatform {
                 });
             }
             else {
+                try {
+                    botsApplication.unregisterBot(usingToken);
+                } catch (TelegramApiException notUsed) { }
                 botState = BotState.Stopped;
+                telegramClient = null;
+                telegramHandler = null;
                 return CompletableFuture.completedFuture(false);
             }
         })
@@ -161,7 +166,12 @@ public class TelegramPlatform implements ISocialPlatform {
                 return updateCommandSuggestions();
             }
             else {
+                try {
+                    botsApplication.unregisterBot(usingToken);
+                } catch (TelegramApiException notUsed) { }
                 botState = BotState.Stopped;
+                telegramClient = null;
+                telegramHandler = null;
                 return CompletableFuture.completedFuture(false);
             }
         });
