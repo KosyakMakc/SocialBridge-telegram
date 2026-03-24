@@ -10,9 +10,9 @@ import io.github.kosyakmakc.socialBridgeTelegram.TelegramPlatform;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramMessageKey;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramPermissions;
 
-public class Status extends MinecraftCommandBase {
+public class StatusCommand extends MinecraftCommandBase {
 
-    public Status() {
+    public StatusCommand() {
         super("status", TelegramMessageKey.BOT_STATUS_DESCRIPTION, TelegramPermissions.CAN_STATUS);
     }
 

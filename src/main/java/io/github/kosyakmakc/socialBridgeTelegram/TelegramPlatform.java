@@ -14,6 +14,8 @@ import io.github.kosyakmakc.socialBridge.Utils.MessageKey;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.github.kosyakmakc.socialBridgeTelegram.DatabaseTables.TelegramUserTable;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.CacheContainer;
+import io.github.kosyakmakc.socialBridgeTelegram.Utils.ProxyDefinition;
+import io.github.kosyakmakc.socialBridgeTelegram.Utils.ProxyDefinitionFormatException;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramMessageKey;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TranslationException;
 import net.kyori.adventure.text.Component;
@@ -21,7 +23,13 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import net.kyori.adventure.text.minimessage.tag.standard.StandardTags;
+import okhttp3.Credentials;
+import okhttp3.OkHttpClient;
 
+import java.net.Authenticator;
+import java.net.InetSocketAddress;
+import java.net.PasswordAuthentication;
+import java.net.Proxy;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Arrays;
@@ -33,12 +41,14 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.TelegramBotsLongPollingApplication;
+import org.telegram.telegrambots.longpolling.util.TelegramOkHttpClientFactory;
 import org.telegram.telegrambots.meta.api.methods.GetMe;
 import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.commands.SetMyCommands;
@@ -46,6 +56,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.commands.BotCommand;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.j256.ormlite.table.TableUtils;
 
 public class TelegramPlatform implements ISocialPlatform {
@@ -57,12 +68,14 @@ public class TelegramPlatform implements ISocialPlatform {
     private static final int defaultRetryMax = 10;
     private static final String configurationPathRetryDelay = configurationPath + "_retries-delay";
     private static final int defaultRetryDelay = 2;
+    private static final String configurationPathProxyConfig = configurationPath + "_proxy-definition";
+    private static final String defaultProxyConfig = ""; // type://username:password@host:port, where type - http, socks5
 
     private final CacheContainer<TelegramUser> userCaching = new CacheContainer<>(500);
 
     private final Version socialBridgeCompabilityVersion = new Version("0.10.1");
-    private final TelegramBotsLongPollingApplication botsApplication = new TelegramBotsLongPollingApplication();
     
+    private TelegramBotsLongPollingApplication botsApplication;
     private BotState botState = BotState.Stopped;
     private LongPollingHandler telegramHandler;
     private OkHttpTelegramClient telegramClient;
@@ -80,8 +93,20 @@ public class TelegramPlatform implements ISocialPlatform {
 
         logger.info("Telegram bot starting...");
 
+        var proxy = new AtomicReference<ProxyDefinition>();
+
         botState = BotState.Starting;
-        return getTgToken(null)
+        return getProxyConfig(null)
+            .thenCompose(x -> {
+                try {
+                    proxy.set(new ProxyDefinition(x));
+                } catch (ProxyDefinitionFormatException e) {
+                    e.printStackTrace();
+                    logger.warning("Detected bad proxy config in configuration service, default proxy will be used.");
+                    proxy.set(ProxyDefinition.getDefault());
+                }
+                return getTgToken(null);
+            })
             .thenCompose(token -> {
                 if (token.isBlank()) {
                     logger.info("Token missed, connect to telegram canceled");
@@ -91,7 +116,9 @@ public class TelegramPlatform implements ISocialPlatform {
 
                 return withRetries(() -> {
                     try {
-                        telegramClient = new OkHttpTelegramClient(token);
+                        var httpClient = buildHttpClient(proxy.get());
+                        botsApplication = new TelegramBotsLongPollingApplication(ObjectMapper::new, () -> httpClient);
+                        telegramClient = new OkHttpTelegramClient(httpClient, token);
                         telegramHandler = new LongPollingHandler(this);
                         botsApplication.registerBot(token, telegramHandler);
                         usingToken = token;
@@ -125,6 +152,12 @@ public class TelegramPlatform implements ISocialPlatform {
                 });
             }
             else {
+                try {
+                    botsApplication.unregisterBot(usingToken);
+                } catch (TelegramApiException notUsed) { }
+                botState = BotState.Stopped;
+                telegramClient = null;
+                telegramHandler = null;
                 return CompletableFuture.completedFuture(false);
             }
         })
@@ -133,6 +166,12 @@ public class TelegramPlatform implements ISocialPlatform {
                 return updateCommandSuggestions();
             }
             else {
+                try {
+                    botsApplication.unregisterBot(usingToken);
+                } catch (TelegramApiException notUsed) { }
+                botState = BotState.Stopped;
+                telegramClient = null;
+                telegramHandler = null;
                 return CompletableFuture.completedFuture(false);
             }
         });
@@ -160,12 +199,29 @@ public class TelegramPlatform implements ISocialPlatform {
         }
         return CompletableFuture.completedFuture(true);
     }
-    
+
     public CompletableFuture<Boolean> setupToken(String token, ITransaction transaction) {
         var tgModule = getTelegramModule();
 
         var saveConfigTask =  getBridge().getConfigurationService().set(tgModule, configurationPathToken, token, transaction)
                              .thenCompose(isSuccess -> isSuccess ? CompletableFuture.completedFuture(isSuccess) : CompletableFuture.failedFuture(new TranslationException(TelegramMessageKey.SET_TOKEN_FAILED_CONFIG)));
+
+        var stoppingTask = saveConfigTask
+                            .thenCompose(isSuccess -> botState != BotState.Stopped ? stopBot() : CompletableFuture.completedFuture(true))
+                            .thenCompose(isSuccess -> isSuccess ? CompletableFuture.completedFuture(isSuccess) : CompletableFuture.failedFuture(new TranslationException(TelegramMessageKey.SET_TOKEN_FAILED_STOP_BOT)));
+
+        var startingTask = stoppingTask
+                            .thenCompose(isSuccess -> startBot())
+                            .thenCompose(isSuccess -> isSuccess ? CompletableFuture.completedFuture(isSuccess) : CompletableFuture.failedFuture(new TranslationException(TelegramMessageKey.SET_TOKEN_FAILED_START_BOT)));
+
+        return startingTask;
+    }
+
+    public CompletableFuture<Boolean> setupProxy(ProxyDefinition proxy, ITransaction transaction) {
+        var tgModule = getTelegramModule();
+
+        var saveConfigTask = getBridge().getConfigurationService().set(tgModule, configurationPathProxyConfig, proxy.toString(), transaction)
+                             .thenCompose(isSuccess -> isSuccess ? CompletableFuture.completedFuture(isSuccess) : CompletableFuture.failedFuture(new TranslationException(TelegramMessageKey.SET_PROXY_FAILED_CONFIG)));
 
         var stoppingTask = saveConfigTask
                             .thenCompose(isSuccess -> botState != BotState.Stopped ? stopBot() : CompletableFuture.completedFuture(true))
@@ -221,6 +277,11 @@ public class TelegramPlatform implements ISocialPlatform {
                       return defaultRetryDelay;
                   }
               });
+    }
+
+    private CompletableFuture<String> getProxyConfig(ITransaction transaction) {
+        var tgModule = getTelegramModule();
+        return getBridge().getConfigurationService().get(tgModule, configurationPathProxyConfig, defaultProxyConfig, transaction);
     }
 
     public ISocialBridge getBridge() {
@@ -548,6 +609,50 @@ public class TelegramPlatform implements ISocialPlatform {
         var user = new TelegramUser(this, dbUser);
         userCaching.checkAndAdd(user);
         return CompletableFuture.completedFuture(user);
+    }
+
+    private OkHttpClient buildHttpClient(ProxyDefinition proxy) {
+        if (proxy.getType() == Proxy.Type.SOCKS) {
+            if (!proxy.getUsername().isBlank()) {
+                // Override default authenticator
+                Authenticator.setDefault(new Authenticator() {
+                    @Override
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        // For our host and port, return our auth credentials
+                        if (getRequestingHost().equalsIgnoreCase(proxy.getHost())) {
+                            if (proxy.getPort() == getRequestingPort()) {
+                                return new PasswordAuthentication(proxy.getUsername(), proxy.getPassword().toCharArray());
+                            }
+                        }
+                        return null;
+                    }
+                });
+            }
+
+            return new TelegramOkHttpClientFactory.SocksProxyOkHttpClientCreator(
+                () -> new Proxy(Proxy.Type.SOCKS, new InetSocketAddress(proxy.getHost(), proxy.getPort()))
+            ).get();
+        }
+        else if (proxy.getType() == Proxy.Type.HTTP) {
+            return new TelegramOkHttpClientFactory.HttpProxyOkHttpClientCreator(
+                    // Pass the proxy address and type
+                    () -> new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxy.getHost(), proxy.getPort())),
+                    // Provide the authenticator for it
+                    () -> (route, response) -> {
+                        var builder = response.request().newBuilder();
+                        
+                        if (!proxy.getUsername().isBlank()) {
+                            String credential = Credentials.basic(proxy.getUsername(), proxy.getPassword());
+                            builder.header("Proxy-Authorization", credential);
+                        }
+
+                        return builder.build();
+                    }
+            ).get();
+        }
+        else {
+            return new TelegramOkHttpClientFactory.DefaultOkHttpClientCreator().get();
+        }
     }
 
     private TelegramModule getTelegramModule() {

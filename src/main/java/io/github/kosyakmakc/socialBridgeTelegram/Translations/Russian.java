@@ -18,8 +18,13 @@ public class Russian implements ITranslationSource {
                 new LocalizationRecord(TelegramMessageKey.SET_TOKEN_DESCRIPTION.key(), "Установить новый токен боту телеграмма, Если бот подключен, то он будет перезагружен с новым токеном."),
                 new LocalizationRecord(TelegramMessageKey.SET_TOKEN_SUCCESS.key(), "<green>Новый токен сохранен и применен.</green>"),
                 new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_CONFIG.key(), "<red>Не удалось сохранить токен в сервисе конфигураций.</red>"),
+
                 new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_STOP_BOT.key(), "<red>Не удалось остановить бота телеграмма, новый токен сохранен, но не был применен.</red>"),
                 new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_START_BOT.key(), "<red>Не удалось запустить бота телеграмма, новый токен сохранен, но не был применен.</red>"),
+
+                new LocalizationRecord(TelegramMessageKey.SET_PROXY_DESCRIPTION.key(), "Установить новую прокси конфигурацию боту телеграмма, Если бот подключен, то он будет перезагружен с новым прокси."),
+                new LocalizationRecord(TelegramMessageKey.SET_PROXY_SUCCESS.key(), "<green>Новый прокси сохранен и применен.</green>"),
+                new LocalizationRecord(TelegramMessageKey.SET_PROXY_FAILED_CONFIG.key(), "<red>Не удалось сохранить прокси в сервисе конфигураций.</red>"),
 
                 new LocalizationRecord(TelegramMessageKey.BOT_STATUS_DESCRIPTION.key(), "Узнать статус подключения бота телеграмма."),
                 new LocalizationRecord(TelegramMessageKey.BOT_STATUS_CONNECTING.key(), "<yellow>Бот телеграмма подключается...</yellow>"),

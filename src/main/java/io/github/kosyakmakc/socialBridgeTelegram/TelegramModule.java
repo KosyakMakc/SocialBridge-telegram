@@ -6,8 +6,9 @@ import io.github.kosyakmakc.socialBridge.MinecraftPlatform.IModuleLoader;
 import io.github.kosyakmakc.socialBridge.Modules.SocialModule;
 import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.GetBotLinkCommand;
-import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.SetToken;
-import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.Status;
+import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.SetProxyCommand;
+import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.SetTokenCommand;
+import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.StatusCommand;
 import io.github.kosyakmakc.socialBridgeTelegram.SocialCommands.HeartbeatCommand;
 import io.github.kosyakmakc.socialBridgeTelegram.Translations.English;
 import io.github.kosyakmakc.socialBridgeTelegram.Translations.Russian;
@@ -20,8 +21,9 @@ public class TelegramModule extends SocialModule {
     public TelegramModule(IModuleLoader loader, Version version) {
         super(loader, compabilityVersion, version, MODULE_ID, ModuleName);
 
-        addMinecraftCommand(new SetToken());
-        addMinecraftCommand(new Status());
+        addMinecraftCommand(new SetTokenCommand());
+        addMinecraftCommand(new SetProxyCommand());
+        addMinecraftCommand(new StatusCommand());
         addMinecraftCommand(new GetBotLinkCommand());
 
         addSocialCommand(new HeartbeatCommand());
