@@ -7,8 +7,13 @@ public class TelegramMessageKey {
     public static final MessageKey SET_TOKEN_DESCRIPTION = new MessageKey(TelegramModule.MODULE_ID, "set_token_description");
     public static final MessageKey SET_TOKEN_SUCCESS = new MessageKey(TelegramModule.MODULE_ID, "set_token_success");
     public static final MessageKey SET_TOKEN_FAILED_CONFIG = new MessageKey(TelegramModule.MODULE_ID, "set_token_failed_config");
+
     public static final MessageKey SET_TOKEN_FAILED_STOP_BOT = new MessageKey(TelegramModule.MODULE_ID, "set_token_failed_stop_bot");
     public static final MessageKey SET_TOKEN_FAILED_START_BOT = new MessageKey(TelegramModule.MODULE_ID, "set_token_failed_start_bot");
+
+    public static final MessageKey SET_PROXY_DESCRIPTION = new MessageKey(TelegramModule.MODULE_ID, "set_proxy_description");
+    public static final MessageKey SET_PROXY_SUCCESS = new MessageKey(TelegramModule.MODULE_ID, "set_proxy_success");
+    public static final MessageKey SET_PROXY_FAILED_CONFIG = new MessageKey(TelegramModule.MODULE_ID, "set_proxy_failed_config");
 
     public static final MessageKey BOT_STATUS_DESCRIPTION = new MessageKey(TelegramModule.MODULE_ID, "bot_status_description");
     public static final MessageKey BOT_STATUS_CONNECTING = new MessageKey(TelegramModule.MODULE_ID, "bot_status_connecting");

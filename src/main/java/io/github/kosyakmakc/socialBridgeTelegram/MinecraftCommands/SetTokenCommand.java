@@ -11,9 +11,9 @@ import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramMessageKey;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramPermissions;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TranslationException;
 
-public class SetToken extends MinecraftCommandBase {
+public class SetTokenCommand extends MinecraftCommandBase {
 
-    public SetToken() {
+    public SetTokenCommand() {
         super("setupToken", TelegramMessageKey.SET_TOKEN_DESCRIPTION, TelegramPermissions.CAN_SET_LOGIN, List.of(CommandArgument.ofGreedyString("Telegram token")));
     }
 
