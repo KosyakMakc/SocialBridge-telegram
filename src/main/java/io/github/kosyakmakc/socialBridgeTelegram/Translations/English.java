@@ -20,8 +20,8 @@ public class English implements ITranslationSource {
                 new LocalizationRecord(TelegramMessageKey.SET_TOKEN_SUCCESS.key(), "<green>New token saved and applied.</green>"),
                 new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_CONFIG.key(), "<red>Failed to save token to configuration service.</red>"),
 
-                new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_STOP_BOT.key(), "<red>Failed to stop telegram bot, new token saved, but not applied.</red>"),
-                new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_START_BOT.key(), "<red>Failed to start telegram bot, new token saved, but not applied.</red>"),
+                new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_STOP_BOT.key(), "<red>Failed to stop telegram bot, please try again later.</red>"),
+                new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_START_BOT.key(), "<red>Failed to start telegram bot, please try again later.</red>"),
 
                 new LocalizationRecord(TelegramMessageKey.SET_PROXY_DESCRIPTION.key(), "Setup new proxy config to Telegram bot, existed bot also will be reloaded with new proxy config"),
                 new LocalizationRecord(TelegramMessageKey.SET_PROXY_SUCCESS.key(), "<green>New proxy config saved and applied.</green>"),
