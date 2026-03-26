@@ -40,7 +40,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -118,13 +117,12 @@ public class TelegramPlatform implements ISocialPlatform {
                 return getTgToken(null);
             })
             .thenCompose(token -> {
+                usingToken = token;
                 if (token.isBlank()) {
                     logger.info("Token missed, connect to telegram canceled");
                     cancellationToken.cancel();
-                    botState = BotState.Stopped;
-                    return CompletableFuture.completedFuture(false);
+                    return CompletableFuture.failedStage(new CancellationTokenException());
                 }
-                usingToken = token;
 
                 return withRetries(() -> {
                     try {
@@ -140,58 +138,38 @@ public class TelegramPlatform implements ISocialPlatform {
                             botsApplication.unregisterBot(token);
                         } catch (TelegramApiException notUsed) { }
 
-                        return false;
+                        throw new RuntimeException(e);
                     }
-                    return true;
                 }, cancellationToken);
         })
-        .thenComposeAsync(isSuccessStart -> {
-            if (isSuccessStart) {
-                return withRetries(() -> {
-                    try {
-                        var userBot = telegramClient.execute(new GetMe());
-                        telegramHandler.setBotUsername(userBot.getUserName());
-
-                        cancellationToken.throwIfCancelled();
-                        
-                        botState = BotState.Started;
-                        logger.info("Telegram bot connected");
-                    } catch (TelegramApiException e) {
-                        e.printStackTrace();
-
-                        return false;
-                    }
-                    return true;
-                }, cancellationToken);
-            }
-            else {
+        .thenComposeAsync(Void -> {
+            return withRetries(() -> {
                 try {
-                    botsApplication.unregisterBot(usingToken);
-                } catch (TelegramApiException notUsed) { }
-                cancellationToken.cancel();
-                botState = BotState.Stopped;
-                telegramClient = null;
-                telegramHandler = null;
-                return CompletableFuture.completedFuture(false);
-            }
+                    var userBot = telegramClient.execute(new GetMe());
+                    telegramHandler.setBotUsername(userBot.getUserName());
+
+                    cancellationToken.throwIfCancelled();
+                    botState = BotState.Started;
+
+                    logger.info("Telegram bot connected");
+                } catch (TelegramApiException e) {
+                    throw new RuntimeException(e);
+                }
+            }, cancellationToken);
         })
-        .thenComposeAsync(isSuccessStart -> {
-            if (isSuccessStart) {
-                return updateCommandSuggestions(cancellationToken);
-            }
-            else {
-                try {
+        .thenComposeAsync(Void -> updateCommandSuggestions(cancellationToken))
+        .exceptionallyCompose(exception -> {
+            try {
+                if (botsApplication != null) {
                     botsApplication.unregisterBot(usingToken);
-                } catch (TelegramApiException notUsed) { }
-                cancellationToken.cancel();
-                botState = BotState.Stopped;
-                telegramClient = null;
-                telegramHandler = null;
-                return CompletableFuture.completedFuture(false);
-            }
-        })
-        .thenCompose(x -> {
-            return CompletableFuture.completedFuture(x);
+                }
+            } catch (TelegramApiException notUsed) { }
+            cancellationToken.cancel();
+            botState = BotState.Stopped;
+            telegramClient = null;
+            telegramHandler = null;
+
+            return CompletableFuture.failedStage(exception);
         });
     }
 
@@ -330,18 +308,14 @@ public class TelegramPlatform implements ISocialPlatform {
         msg.setParseMode(ParseMode.HTML);
 
         return withRetries(() -> {
-            if (botState == BotState.Started) {
-                try {
-                    telegramClient.execute(msg);
-                    logger.info("tgMessage to channel id=" + msg.getChatId() + " - " + message);
-                }
-                catch (TelegramApiException err) {
-                    err.printStackTrace();
-                    return false;
-                }
+            try {
+                telegramClient.execute(msg);
+                logger.info("tgMessage to channel id=" + msg.getChatId() + " - " + message);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
             }
-            return true;
-        }, lifeCycleBotToken);
+        }, lifeCycleBotToken)
+        .thenApply(Void -> true);
     }
 
     @Override
@@ -352,7 +326,7 @@ public class TelegramPlatform implements ISocialPlatform {
             .thenCompose(templateMessage -> sendMessage(channelId, templateMessage, placeholders));
     }
 
-    public CompletableFuture<Boolean> sendReply(ISocialMessage socialMessage, String template, HashMap<String, String> placeholders) {
+    public CompletableFuture<Void> sendReply(ISocialMessage socialMessage, String template, HashMap<String, String> placeholders) {
         if (!(socialMessage instanceof TelegramSocialMessage telegramMessage)) {
             throw new RuntimeException("Social message from another SocialPlatform, please provide messages from this SocialPlatform");
         }
@@ -367,21 +341,16 @@ public class TelegramPlatform implements ISocialPlatform {
         msg.setParseMode(ParseMode.HTML);
 
         return withRetries(() -> {
-            if (botState == BotState.Started) {
-                try {
-                    telegramClient.execute(msg);
-                    logger.info("tgMessage to channel id=" + msg.getChatId() + " - " + message);
-                }
-                catch (TelegramApiException err) {
-                    err.printStackTrace();
-                    return false;
-                }
+            try {
+                telegramClient.execute(msg);
+                logger.info("tgMessage to channel id=" + msg.getChatId() + " - " + message);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
             }
-            return true;
         }, lifeCycleBotToken);
     }
 
-    public CompletableFuture<Boolean> sendMessage(SocialUser socialUser, String template, HashMap<String, String> placeholders) {
+    public CompletableFuture<Void> sendMessage(SocialUser socialUser, String template, HashMap<String, String> placeholders) {
         if (!(socialUser instanceof TelegramUser telegramUser)) {
             throw new RuntimeException("Social message from another SocialPlatform, please provide messages from this SocialPlatform");
         }
@@ -394,17 +363,12 @@ public class TelegramPlatform implements ISocialPlatform {
         msg.setParseMode(ParseMode.HTML);
 
         return withRetries(() -> {
-            if (botState == BotState.Started) {
-                try {
-                    telegramClient.execute(msg);
-                    logger.info("tgMessage to \"" + socialUser.getName() + "\" - " + message);
-                }
-                catch (TelegramApiException err) {
-                    err.printStackTrace();
-                    return false;
-                }
+            try {
+                telegramClient.execute(msg);
+                logger.info("tgMessage to \"" + socialUser.getName() + "\" - " + message);
+            } catch (TelegramApiException e) {
+                throw new RuntimeException(e);
             }
-            return true;
         }, lifeCycleBotToken);
     }
 
@@ -428,11 +392,13 @@ public class TelegramPlatform implements ISocialPlatform {
         return MiniMessage.miniMessage().serialize(resolvedComponents);
     }
 
-    private CompletableFuture<Boolean> withRetries(Callable<Boolean> callable, CancellationToken cancellation) {
+    private CompletableFuture<Void> withRetries(Runnable callable, CancellationToken cancellation) {
         return CompletableFuture.supplyAsync(() ->  {
             var retryCounter = 0;
             var delay = getRetryDelay(null).join();
             var maxRetries = getMaxRetry(null).join();
+
+            Exception lastException = null;
 
             while (retryCounter < maxRetries) {
                 try {
@@ -447,30 +413,35 @@ public class TelegramPlatform implements ISocialPlatform {
                             }
                         } catch (InterruptedException e1) {
                             logger.info("Retry attempts canceled by interruption");
-                            return false;
+                            throw new CancellationTokenException();
                         }
                     }
-                    if (callable.call()) {
-                        return true;
-                    }
+                    callable.run();
+                    return null;
                 } catch (CancellationTokenException e) {
                     logger.info("Retry attempts canceled by cancellation");
                     throw e;
                 } catch (Exception e) {
                     e.printStackTrace();
+                    lastException = e;
                 }
 
                 retryCounter++;
             }
             logger.info("All retry attempts failed");
-            return false;
+            throw new RuntimeException(lastException);
         });
     }
 
     @Override
     public CompletableFuture<Void> connectModule(ISocialModule module) {
         connectedModules.add(module);
-        return updateCommandSuggestions(lifeCycleBotToken).thenRun(() -> {}); // empty runnable for resolve return type from boolean to Void 
+        if (lifeCycleBotToken.isCancelled()) {
+            return CompletableFuture.completedFuture(null);
+        }
+        else {
+            return updateCommandSuggestions(lifeCycleBotToken).thenRun(() -> {}); // empty runnable for resolve return type from boolean to Void 
+        }
     }
 
     @Override
@@ -532,10 +503,8 @@ public class TelegramPlatform implements ISocialPlatform {
             .thenApply(Void -> true);
     }
 
-    private CompletableFuture<Boolean> updateCommandSuggestions(String languageCode, List<ImmutablePair<ISocialModule, ISocialCommand>> commands, CancellationToken token) {
-        if (getBotState() != BotState.Started) {
-            return CompletableFuture.completedFuture(false);
-        }
+    private CompletableFuture<Void> updateCommandSuggestions(String languageCode, List<ImmutablePair<ISocialModule, ISocialCommand>> commands, CancellationToken token) {
+        token.throwIfCancelled();
 
         @SuppressWarnings("unchecked")
         var tasks = (CompletableFuture<BotCommand>[]) commands
@@ -570,12 +539,18 @@ public class TelegramPlatform implements ISocialPlatform {
                     .toList();
 
                 if (commandsInfo.isEmpty()) {
-                    return CompletableFuture.completedFuture(true);
+                    return CompletableFuture.completedFuture(null);
                 }
                 else {
                     var commandQuery = new SetMyCommands(commandsInfo);
                     commandQuery.setLanguageCode(languageCode);
-                    return this.withRetries(() -> telegramClient.execute(commandQuery), token);
+                    return this.withRetries(() -> {
+                        try {
+                            telegramClient.execute(commandQuery);
+                        } catch (TelegramApiException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }, token);
                 }
             });
     }
