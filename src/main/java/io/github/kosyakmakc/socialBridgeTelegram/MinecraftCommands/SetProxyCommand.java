@@ -2,11 +2,13 @@ package io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.CompletionException;
 
 import io.github.kosyakmakc.socialBridge.Commands.Arguments.CommandArgument;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCommandBase;
 import io.github.kosyakmakc.socialBridge.Commands.MinecraftCommands.MinecraftCommandExecutionContext;
 import io.github.kosyakmakc.socialBridgeTelegram.TelegramPlatform;
+import io.github.kosyakmakc.socialBridgeTelegram.Utils.CancellationTokenException;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.ProxyDefinition;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.ProxyDefinitionFormatException;
 import io.github.kosyakmakc.socialBridgeTelegram.Utils.TelegramMessageKey;
@@ -30,19 +32,26 @@ public class SetProxyCommand extends MinecraftCommandBase {
         var placeholders = new HashMap<String, String>();
         try {
             var proxy = new ProxyDefinition(rawProxyDefinition);
-            
+
             var setupTask = this.getBridge().getSocialPlatform(TelegramPlatform.class).setupProxy(proxy, null);
-            
+
             setupTask.thenCompose(isSuccess -> sender.sendMessage(TelegramMessageKey.SET_PROXY_SUCCESS, sender.getLocale(), placeholders, null));
-            
+
             setupTask
             .exceptionally(err -> {
-                if (err instanceof TranslationException translationException) {
+                if (err instanceof CompletionException completionException) {
+                        err = completionException.getCause();
+                    }
+
+                    if (err instanceof CancellationTokenException) {
+                    sender.sendMessage("setupProxy cancelled", placeholders);
+                }
+                else if (err instanceof TranslationException translationException) {
                     sender.sendMessage(translationException.getMessageKey(), sender.getLocale(), placeholders, null);
                 } else {
                     sender.sendMessage(err.getMessage(), placeholders);
                 }
-                
+
                 return true; // not used, just for close signature of lambda
             });
         }

@@ -108,7 +108,7 @@ public class TelegramSocialMessage implements ISocialMessage {
 
     @Override
     public CompletableFuture<Boolean> sendReply(String messageTemplate, HashMap<String, String> placeholders) {
-        return socialPlatform.sendReply(this, messageTemplate, placeholders);
+        return socialPlatform.sendReply(this, messageTemplate, placeholders).thenApply(Void -> true);
     }
 
     @Override
