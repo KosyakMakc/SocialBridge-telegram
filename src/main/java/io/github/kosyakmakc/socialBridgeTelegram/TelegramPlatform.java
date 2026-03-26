@@ -300,7 +300,6 @@ public class TelegramPlatform implements ISocialPlatform {
 
     @Override
     public CompletableFuture<Boolean> sendMessage(Identifier channelId, String template, HashMap<String, String> placeholders) {
-        lifeCycleBotToken.throwIfCancelled();
         var message = BuildTemplateMessage(template, placeholders);
 
         var chatId = channelId.value();
@@ -331,8 +330,6 @@ public class TelegramPlatform implements ISocialPlatform {
             throw new RuntimeException("Social message from another SocialPlatform, please provide messages from this SocialPlatform");
         }
 
-        lifeCycleBotToken.throwIfCancelled();
-
         var message = BuildTemplateMessage(template, placeholders);
 
         var chatId = telegramMessage.getChannelId().value();
@@ -354,8 +351,6 @@ public class TelegramPlatform implements ISocialPlatform {
         if (!(socialUser instanceof TelegramUser telegramUser)) {
             throw new RuntimeException("Social message from another SocialPlatform, please provide messages from this SocialPlatform");
         }
-
-        lifeCycleBotToken.throwIfCancelled();
 
         var message = BuildTemplateMessage(template, placeholders);
 
@@ -394,6 +389,8 @@ public class TelegramPlatform implements ISocialPlatform {
 
     private CompletableFuture<Void> withRetries(Runnable callable, CancellationToken cancellation) {
         return CompletableFuture.supplyAsync(() ->  {
+            cancellation.throwIfCancelled();
+
             var retryCounter = 0;
             var delay = getRetryDelay(null).join();
             var maxRetries = getMaxRetry(null).join();
@@ -504,8 +501,6 @@ public class TelegramPlatform implements ISocialPlatform {
     }
 
     private CompletableFuture<Void> updateCommandSuggestions(String languageCode, List<ImmutablePair<ISocialModule, ISocialCommand>> commands, CancellationToken token) {
-        token.throwIfCancelled();
-
         @SuppressWarnings("unchecked")
         var tasks = (CompletableFuture<BotCommand>[]) commands
             .stream()
