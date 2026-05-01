@@ -23,4 +23,12 @@ public class TelegramMessageKey {
 
     // public static final MessageKey BOT_STARTED = new MessageKey(TelegramModule.MODULE_ID, "bot_started");
     // public static final MessageKey BOT_STOPPED = new MessageKey(TelegramModule.MODULE_ID, "bot_stopped");
+
+    public static final MessageKey BOT_START_COMMAND_DESCRIPTION = new MessageKey(TelegramModule.MODULE_ID, "bot_start_command_description");
+    public static final MessageKey BOT_START_COMMAND_SUCCESS = new MessageKey(TelegramModule.MODULE_ID, "bot_start_command_success");
+    public static final MessageKey BOT_START_COMMAND_FAILED = new MessageKey(TelegramModule.MODULE_ID, "bot_start_command_failed");
+
+    public static final MessageKey BOT_STOP_COMMAND_DESCRIPTION = new MessageKey(TelegramModule.MODULE_ID, "bot_stop_command_description");
+    public static final MessageKey BOT_STOP_COMMAND_SUCCESS = new MessageKey(TelegramModule.MODULE_ID, "bot_stop_command_success");
+    public static final MessageKey BOT_STOP_COMMAND_FAILED = new MessageKey(TelegramModule.MODULE_ID, "bot_stop_command_failed");
 }

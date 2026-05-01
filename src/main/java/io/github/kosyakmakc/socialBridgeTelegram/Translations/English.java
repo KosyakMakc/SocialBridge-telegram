@@ -31,7 +31,15 @@ public class English implements ITranslationSource {
                 new LocalizationRecord(TelegramMessageKey.BOT_STATUS_CONNECTING.key(), "<yellow>Telegram bot are connecting...</yellow>"),
                 new LocalizationRecord(TelegramMessageKey.BOT_STATUS_CONNECTED.key(), "<green>Telegram bot successfully connected.</green>"),
                 new LocalizationRecord(TelegramMessageKey.BOT_STATUS_STOPPING.key(), "<yellow>Telegram bot are stopping...</yellow>"),
-                new LocalizationRecord(TelegramMessageKey.BOT_STATUS_STOPPED.key(), "<red>Telegram bot stopped.</red>")
-        );
+                new LocalizationRecord(TelegramMessageKey.BOT_STATUS_STOPPED.key(), "<red>Telegram bot stopped.</red>"),
+
+                new LocalizationRecord(TelegramMessageKey.BOT_START_COMMAND_DESCRIPTION.key(), "Start telegram bot."),
+                new LocalizationRecord(TelegramMessageKey.BOT_START_COMMAND_SUCCESS.key(), "<green>Telegram bot started and connected.</green>"),
+                new LocalizationRecord(TelegramMessageKey.BOT_START_COMMAND_FAILED.key(), "<red>Failed to start telegram bot.</red>"),
+
+                new LocalizationRecord(TelegramMessageKey.BOT_STOP_COMMAND_DESCRIPTION.key(), "Stop telegram bot."),
+                new LocalizationRecord(TelegramMessageKey.BOT_STOP_COMMAND_SUCCESS.key(), "<yellow>Telegram bot stopped and disconnected.</red>"),
+                new LocalizationRecord(TelegramMessageKey.BOT_STOP_COMMAND_FAILED.key(), "<red>Failed to stop telegram bot, but signal to stop was sent, check status later.</red>")
+            );
     }
 }

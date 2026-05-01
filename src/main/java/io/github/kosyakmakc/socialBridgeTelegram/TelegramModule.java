@@ -8,14 +8,16 @@ import io.github.kosyakmakc.socialBridge.Utils.Version;
 import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.GetBotLinkCommand;
 import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.SetProxyCommand;
 import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.SetTokenCommand;
+import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.StartCommand;
 import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.StatusCommand;
+import io.github.kosyakmakc.socialBridgeTelegram.MinecraftCommands.StopCommand;
 import io.github.kosyakmakc.socialBridgeTelegram.SocialCommands.HeartbeatCommand;
 import io.github.kosyakmakc.socialBridgeTelegram.Translations.English;
 import io.github.kosyakmakc.socialBridgeTelegram.Translations.Russian;
 
 public class TelegramModule extends SocialModule {
     public static UUID MODULE_ID = UUID.fromString("f7e27e90-3e6c-4331-990f-1977b8a5481a");
-    private static final Version compabilityVersion = new Version("0.10.1");
+    private static final Version compabilityVersion = new Version("0.10.2");
     private static final String ModuleName = "telegram";
 
     public TelegramModule(IModuleLoader loader, Version version) {
@@ -25,6 +27,8 @@ public class TelegramModule extends SocialModule {
         addMinecraftCommand(new SetProxyCommand());
         addMinecraftCommand(new StatusCommand());
         addMinecraftCommand(new GetBotLinkCommand());
+        addMinecraftCommand(new StopCommand());
+        addMinecraftCommand(new StartCommand());
 
         addSocialCommand(new HeartbeatCommand());
 

@@ -15,22 +15,30 @@ public class Russian implements ITranslationSource {
     @Override
     public List<LocalizationRecord> getRecords() {
         return List.of(
-                new LocalizationRecord(TelegramMessageKey.SET_TOKEN_DESCRIPTION.key(), "Установить новый токен боту телеграмма, Если бот подключен, то он будет перезагружен с новым токеном."),
-                new LocalizationRecord(TelegramMessageKey.SET_TOKEN_SUCCESS.key(), "<green>Новый токен сохранен и применен.</green>"),
-                new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_CONFIG.key(), "<red>Не удалось сохранить токен в сервисе конфигураций.</red>"),
+            new LocalizationRecord(TelegramMessageKey.SET_TOKEN_DESCRIPTION.key(), "Установить новый токен боту телеграмма, Если бот подключен, то он будет перезагружен с новым токеном."),
+            new LocalizationRecord(TelegramMessageKey.SET_TOKEN_SUCCESS.key(), "<green>Новый токен сохранен и применен.</green>"),
+            new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_CONFIG.key(), "<red>Не удалось сохранить токен в сервисе конфигураций.</red>"),
 
-                new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_STOP_BOT.key(), "<red>Не удалось остановить бота телеграмма, пожалуйста попробуйте позже.</red>"),
-                new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_START_BOT.key(), "<red>Не удалось запустить бота телеграмма, пожалуйста попробуйте позже.</red>"),
+            new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_STOP_BOT.key(), "<red>Не удалось остановить бота телеграмма, пожалуйста попробуйте позже.</red>"),
+            new LocalizationRecord(TelegramMessageKey.SET_TOKEN_FAILED_START_BOT.key(), "<red>Не удалось запустить бота телеграмма, пожалуйста попробуйте позже.</red>"),
 
-                new LocalizationRecord(TelegramMessageKey.SET_PROXY_DESCRIPTION.key(), "Установить новую прокси конфигурацию боту телеграмма, Если бот подключен, то он будет перезагружен с новым прокси."),
-                new LocalizationRecord(TelegramMessageKey.SET_PROXY_SUCCESS.key(), "<green>Новый прокси сохранен и применен.</green>"),
-                new LocalizationRecord(TelegramMessageKey.SET_PROXY_FAILED_CONFIG.key(), "<red>Не удалось сохранить прокси в сервисе конфигураций.</red>"),
+            new LocalizationRecord(TelegramMessageKey.SET_PROXY_DESCRIPTION.key(), "Установить новую прокси конфигурацию боту телеграмма, Если бот подключен, то он будет перезагружен с новым прокси."),
+            new LocalizationRecord(TelegramMessageKey.SET_PROXY_SUCCESS.key(), "<green>Новый прокси сохранен и применен.</green>"),
+            new LocalizationRecord(TelegramMessageKey.SET_PROXY_FAILED_CONFIG.key(), "<red>Не удалось сохранить прокси в сервисе конфигураций.</red>"),
 
-                new LocalizationRecord(TelegramMessageKey.BOT_STATUS_DESCRIPTION.key(), "Узнать статус подключения бота телеграмма."),
-                new LocalizationRecord(TelegramMessageKey.BOT_STATUS_CONNECTING.key(), "<yellow>Бот телеграмма подключается...</yellow>"),
-                new LocalizationRecord(TelegramMessageKey.BOT_STATUS_CONNECTED.key(), "<green>Бот телеграмма успешно подключен.</green>"),
-                new LocalizationRecord(TelegramMessageKey.BOT_STATUS_STOPPING.key(), "<yellow>Бот телеграмма останавливается...</yellow>"),
-                new LocalizationRecord(TelegramMessageKey.BOT_STATUS_STOPPED.key(), "<red>Бот телеграмма остановлен.</red>")
+            new LocalizationRecord(TelegramMessageKey.BOT_STATUS_DESCRIPTION.key(), "Узнать статус подключения бота телеграмма."),
+            new LocalizationRecord(TelegramMessageKey.BOT_STATUS_CONNECTING.key(), "<yellow>Бот телеграмма подключается...</yellow>"),
+            new LocalizationRecord(TelegramMessageKey.BOT_STATUS_CONNECTED.key(), "<green>Бот телеграмма успешно подключен.</green>"),
+            new LocalizationRecord(TelegramMessageKey.BOT_STATUS_STOPPING.key(), "<yellow>Бот телеграмма останавливается...</yellow>"),
+            new LocalizationRecord(TelegramMessageKey.BOT_STATUS_STOPPED.key(), "<red>Бот телеграмма остановлен.</red>"),
+
+            new LocalizationRecord(TelegramMessageKey.BOT_START_COMMAND_DESCRIPTION.key(), "Запустить телеграмм бота."),
+            new LocalizationRecord(TelegramMessageKey.BOT_START_COMMAND_SUCCESS.key(), "<green>Бот телеграмма запущен и подключен.</green>"),
+            new LocalizationRecord(TelegramMessageKey.BOT_START_COMMAND_FAILED.key(), "<red>Не удалось запустить телеграмм бота.</red>"),
+
+            new LocalizationRecord(TelegramMessageKey.BOT_STOP_COMMAND_DESCRIPTION.key(), "Остановить телеграмм бота."),
+            new LocalizationRecord(TelegramMessageKey.BOT_STOP_COMMAND_SUCCESS.key(), "<yellow>Телеграмм бот остановлен и отключен.</red>"),
+            new LocalizationRecord(TelegramMessageKey.BOT_STOP_COMMAND_FAILED.key(), "<red>Не удалось остановить телеграмм бота, однако сигнал к остановке был отправлен, проверьте статус позже.</red>")
         );
     }
 }

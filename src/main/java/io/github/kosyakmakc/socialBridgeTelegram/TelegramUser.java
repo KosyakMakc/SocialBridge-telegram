@@ -40,6 +40,12 @@ public class TelegramUser extends SocialUser implements Comparable<TelegramUser>
     public CompletableFuture<Boolean> sendMessage(String message, HashMap<String, String> placeholders) {
         return ((TelegramPlatform) getPlatform()).sendMessage(this, message, placeholders).thenApply(Void -> true);
     }
+    
+
+    @Override
+    public CompletableFuture<Boolean> sendMessage(MessageKey messageKey, HashMap<String, String> placeholders, ITransaction transaction) {
+        return sendMessage(messageKey, getLocale(), placeholders, transaction);
+    }
 
     @Override
     public CompletableFuture<Boolean> sendMessage(MessageKey message, String locale, HashMap<String, String> placeholders, ITransaction transaction) {

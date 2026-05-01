@@ -112,6 +112,12 @@ public class TelegramSocialMessage implements ISocialMessage {
     }
 
     @Override
+    public CompletableFuture<Boolean> sendReply(MessageKey messageKey, HashMap<String, String> placeholders, ITransaction transaction) {
+        return getAuthor()
+                .thenCompose(sender -> sendReply(messageKey, sender.getLocale(), placeholders, transaction));
+    }
+
+    @Override
     public CompletableFuture<Boolean> sendReply(MessageKey message, String locale, HashMap<String, String> placeholders, ITransaction transaction) {
         return socialPlatform
             .getBridge()
